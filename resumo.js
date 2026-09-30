@@ -88,7 +88,8 @@ formulario.addEventListener('submit', async (evento) => {
     `📌 DIA ${dataEscolhida.split('-').reverse().join('-')}`,
     `⌚ HORÁRIO ${horarioEscolhido}:00`,
     '',
-    '💇🏽‍♂️ *PROFISSIONAL*',
+    '💇🏽‍♂️ *PROFISSIONAL*',$
+
     profissionais.get(profissional),
     '',
     '✂️ *SERVIÇO*',
@@ -127,7 +128,7 @@ formulario.addEventListener('submit', async (evento) => {
     }
   }
   const mensagem = [
-    '📆 *MEU AGENDAMENTO*',
+    '🗓️ *MEU AGENDAMENTO*',
     `👥 CLIENTE: *${nome.value.trim()}*`,
     `📞 TELEFONE: ${telefone.value.replace(/\D/g, '')}`,
     '=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=',
@@ -144,7 +145,7 @@ formulario.addEventListener('submit', async (evento) => {
     '',
     '*CASO DESEJE CANCELAR O AGENDAMENTO*',
     '❌ Abra o link abaixo e envie o pedido de cancelamento:',
-    'https://wa.me/5579996776478?text=Quero%20cancelar%20meu%20agendamento',
+    'https://wa.me/557998815390?text=Quero%20cancelar%20meu%20agendamento',
     '',
     '*SOLICITAÇÃO DE AGENDAMENTO*',
     'Aguardando confirmação do barbeiro.',
