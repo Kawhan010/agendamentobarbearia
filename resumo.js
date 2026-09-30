@@ -96,7 +96,7 @@ formulario.addEventListener('submit', async (evento) => {
     '',
     'Gostaria de cancelar este atendimento. Pode confirmar o cancelamento?',
   ].join('\n');
-  const linkCancelamento = `https://wa.me/5579996776478?text=${encodeURIComponent(mensagemCancelamento)}`;
+  const linkCancelamento = `https://wa.me/557998815390?text=${encodeURIComponent(mensagemCancelamento)}`;
   if (cancelar) {
     statusCliente.textContent = 'Envie o pedido no WhatsApp e aguarde a confirmação do cancelamento.';
     window.location.href = linkCancelamento;
@@ -150,5 +150,5 @@ formulario.addEventListener('submit', async (evento) => {
     'Aguardando confirmação do barbeiro.',
   ].join('\n');
   statusCliente.textContent = 'Envie a mensagem no WhatsApp e aguarde a confirmação do barbeiro.';
-  window.location.href = `https://wa.me/5579996776478?text=${encodeURIComponent(mensagem)}`;
+  window.location.href = `https://wa.me/557998815390?text=${encodeURIComponent(mensagem)}`;
 });
