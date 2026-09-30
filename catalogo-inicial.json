@@ -1,0 +1,119 @@
+[
+  {
+    "nome": "Pezinho",
+    "categoria": "individual",
+    "ativo": true,
+    "preco": 10.0,
+    "imagem": "assets/pezinho.jpg",
+    "descricao": "Contorno e acabamento do cabelo.",
+    "id": "a35b9068-bf9a-4610-bd82-75c14a864145"
+  },
+  {
+    "nome": "Sobrancelha",
+    "categoria": "individual",
+    "ativo": true,
+    "preco": 10.0,
+    "imagem": "assets/sobrancelha.jpg",
+    "descricao": "Limpeza e definição do desenho.",
+    "id": "d61d6507-f8d1-4f8a-bb37-55a5d94c94f4"
+  },
+  {
+    "nome": "Barba",
+    "categoria": "individual",
+    "ativo": true,
+    "preco": 20.0,
+    "imagem": "assets/barba.jpg",
+    "descricao": "Desenho e acabamento da barba.",
+    "id": "f031d3aa-760c-4328-acfb-c3ed45f78061"
+  },
+  {
+    "nome": "Corte",
+    "categoria": "individual",
+    "ativo": true,
+    "preco": 30.0,
+    "imagem": "assets/corte.jpg",
+    "descricao": "Um corte para o seu estilo.",
+    "id": "251d3c43-7315-4854-8142-37cffee2c58c"
+  },
+  {
+    "nome": "Botox capilar",
+    "categoria": "individual",
+    "ativo": true,
+    "preco": 80.0,
+    "imagem": "assets/botox.png",
+    "descricao": "Cuidado e tratamento dos fios.",
+    "id": "95a98b7f-dbdc-485e-be14-036eea1e012b"
+  },
+  {
+    "nome": "Barba + sobrancelha",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 25.0,
+    "imagem": "assets/barba.jpg",
+    "descricao": "Desenho da barba e definição da sobrancelha.",
+    "id": "002f1134-db5f-4e68-aa1f-4a33e9fa71a4"
+  },
+  {
+    "nome": "Barba + pezinho",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 30.0,
+    "imagem": "assets/barba.jpg",
+    "descricao": "Desenho da barba e acabamento do cabelo.",
+    "id": "25da1668-57e5-4d73-841a-828cccb2cc7f"
+  },
+  {
+    "nome": "Em dia: pezinho + barba + sobrancelha",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 35.0,
+    "imagem": "assets/pezinho.jpg",
+    "descricao": "Pezinho + barba + sobrancelha",
+    "id": "b34f8252-a0b2-443f-85fc-6f10509467a2"
+  },
+  {
+    "nome": "Cabelo + sobrancelha",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 35.0,
+    "imagem": "assets/corte.jpg",
+    "descricao": "Corte de cabelo e definição da sobrancelha.",
+    "id": "6b83b0cd-f0af-4bf5-808d-5cfa87dd19a7"
+  },
+  {
+    "nome": "Clássico: corte + barba",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 45.0,
+    "imagem": "assets/corte.jpg",
+    "descricao": "Corte + barba",
+    "id": "74de98bb-c87f-4346-9828-aa40292d90ee"
+  },
+  {
+    "nome": "Visual completo: corte + barba + sobrancelha",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 50.0,
+    "imagem": "assets/corte.jpg",
+    "descricao": "Corte + barba + sobrancelha",
+    "id": "cbfe9d8a-8587-48b5-b8b9-09e11bad3442"
+  },
+  {
+    "nome": "Renovação: botox capilar + corte",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 90.0,
+    "imagem": "assets/botox.png",
+    "descricao": "Botox capilar + corte",
+    "id": "b8861fc8-2f93-410b-937f-137e33b11f76"
+  },
+  {
+    "nome": "Botox + corte + barba",
+    "categoria": "combo",
+    "ativo": true,
+    "preco": 100.0,
+    "imagem": "assets/botox.png",
+    "descricao": "Botox capilar, corte de cabelo e desenho da barba.",
+    "id": "95162924-dfbb-411e-8bb6-0f66de590b80"
+  }
+]
