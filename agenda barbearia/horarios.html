@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escolha o horário — Barbearia Sales</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="supabase-config.js" defer></script>
+  <script src="agenda-db.js" defer></script>
+  <script src="horarios.js" defer></script>
+</head>
+<body>
+  <header class="cabecalho">
+    <img class="logo" src="assets/barbearia%20Sales.jpg" alt="Barbearia Sales">
+    <h1>Escolha seu horário</h1>
+  </header>
+  <main class="agendamento">
+    <a class="voltar" id="voltar-servicos" href="agendamento.html">← Voltar aos serviços</a>
+    <section class="selecao-profissionais" aria-labelledby="titulo-horarios">
+      <div class="titulo-horarios">
+        <h2 id="titulo-horarios">Qual o melhor dia para você?</h2>
+      </div>
+      <p id="escolha-atual"></p>
+      <form id="form-horarios" class="dados-cliente">
+        <fieldset class="selecao-profissionais" id="etapa-dias">
+          <legend>Data do atendimento</legend>
+          <p>Escolha entre hoje e os próximos 14 dias.</p>
+          <div class="grade-dias" id="grade-dias"></div>
+        </fieldset>
+        <div class="dia-escolhido" id="dia-escolhido" hidden>
+          <strong id="texto-dia-escolhido"></strong>
+          <button type="button" class="mudar-dia" id="mudar-dia">Mudar dia</button>
+        </div>
+        <fieldset class="selecao-profissionais" id="etapa-horarios" hidden>
+          <legend>Escolha um horário</legend>
+          <p>Atendimentos de 40 minutos. Horários ilustrativos, ainda sem consulta à agenda da barbearia.</p>
+          <div class="grade-horarios" id="grade-horarios"></div>
+        </fieldset>
+        <p id="status-horarios" role="status">Selecione uma data para ver os horários.</p>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
+
