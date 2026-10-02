@@ -107,7 +107,9 @@ formulario.addEventListener('submit', async (evento) => {
     '',
     'Gostaria de cancelar este atendimento. Pode confirmar o cancelamento?',
   ].join('\n');
-  const linkCancelamento = `https://wa.me/${SaaS.loja.whatsapp}?text=${encodeURIComponent(mensagemCancelamento)}`;
+  // O redirecionamento de wa.me pode substituir emojis por U+FFFD.
+  // O endpoint direto preserva o texto no link que abre a conversa.
+  const linkCancelamento = `https://api.whatsapp.com/send?phone=${SaaS.loja.whatsapp}&text=${encodeURIComponent(mensagemCancelamento)}`;
   if (cancelar) {
     statusCliente.textContent = 'Envie o pedido no WhatsApp e aguarde a confirmação do cancelamento.';
     window.location.href = linkCancelamento;
@@ -156,11 +158,11 @@ formulario.addEventListener('submit', async (evento) => {
     '',
     '*CASO DESEJE CANCELAR O AGENDAMENTO*',
     '❌ Abra o link abaixo e envie o pedido de cancelamento:',
-    `https://wa.me/${SaaS.loja.whatsapp}?text=Quero%20cancelar%20meu%20agendamento`,
+    `https://api.whatsapp.com/send?phone=${SaaS.loja.whatsapp}&text=Quero%20cancelar%20meu%20agendamento`,
     '',
     '*SOLICITAÇÃO DE AGENDAMENTO*',
     'Aguardando confirmação do barbeiro.',
   ].join('\n');
   statusCliente.textContent = 'Envie a mensagem no WhatsApp e aguarde a confirmação do barbeiro.';
-  window.location.href = `https://wa.me/${SaaS.loja.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+  window.location.href = `https://api.whatsapp.com/send?phone=${SaaS.loja.whatsapp}&text=${encodeURIComponent(mensagem)}`;
 });
