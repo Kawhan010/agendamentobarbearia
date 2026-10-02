@@ -10,7 +10,7 @@ Esta cópia usa tabelas `saas_*`, independentes das tabelas da agenda original. 
 4. Sirva a pasta por HTTP (por exemplo, Live Server). Abra `admin.html`, crie a conta, confirme o e-mail e entre. Cadastre nome, identificador do link e WhatsApp da barbearia.
 5. Cadastre serviços e profissionais, ajuste o expediente e compartilhe o link exibido no painel.
 
-Os dados existentes de Salles não são migrados automaticamente. Uma nova barbearia começa com catálogo vazio, um profissional e expediente padrão; revise as configurações antes de compartilhar.
+Uma nova barbearia começa com catálogo vazio, um profissional e expediente padrão; revise as configurações antes de compartilhar. No projeto publicado, a instalação SaaS foi aplicada e a barbearia `barbearia-salles` já tem cadastro e serviço ativo. Reservas da agenda original não foram migradas.
 
 ## Acesso
 

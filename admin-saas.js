@@ -6,7 +6,7 @@ function telefoneLoja(valor) {
 }
 async function abrirBarbearia() {
   const membros=await api('/rest/v1/saas_membros?select=barbearia_id');
-  if(!membros.length){$('form-login').hidden=true;$('form-cadastro').hidden=true;$('form-barbearia').hidden=false;aviso('Conta conectada. Cadastre sua barbearia para começar.');return;}
+  if(!membros.length){mostrarFormulario('form-barbearia');$('sair').hidden=false;aviso('Conta conectada. Cadastre sua barbearia para começar.');return;}
   const lojas=await api('/rest/v1/saas_barbearias?select=*&id=eq.'+membros[0].barbearia_id);
   if(!lojas.length)throw new Error('Barbearia não encontrada.');
   lojaAtual=lojas[0];demo=false;
@@ -17,8 +17,9 @@ async function abrirBarbearia() {
   for(const campo of ['nome','whatsapp','logo'])$('form-configuracoes').elements[campo].value=lojaAtual[campo];
   await carregar();$('login').hidden=true;$('painel').hidden=false;$('sair').hidden=false;aviso('Sua barbearia está conectada.');
 }
-function submitSeguro(id,fn){$(id).onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await fn(e.target);}catch(err){aviso(err.message);}finally{b.disabled=false;}};}
-$('mostrar-cadastro').onclick=()=>{$('form-cadastro').hidden=!$('form-cadastro').hidden;$('form-login').hidden=!$('form-cadastro').hidden;};
+function mostrarFormulario(id){for(const nome of ['form-login','form-cadastro','form-barbearia','form-nova-senha'])$(nome).hidden=nome!==id;$('mostrar-cadastro').hidden=!['form-login','form-cadastro'].includes(id);$('recuperar-senha').hidden=id!=='form-login';$('demonstracao').hidden=!['form-login','form-cadastro'].includes(id);}
+function submitSeguro(id,fn){$(id).onsubmit=async e=>{e.preventDefault();const b=e.submitter||e.target.querySelector('button[type="submit"],button:not([type])');if(b)b.disabled=true;try{await fn(e.target);}catch(err){aviso(err.message);}finally{if(b)b.disabled=false;}};}
+$('mostrar-cadastro').onclick=()=>{const cadastro=$('form-cadastro').hidden;mostrarFormulario(cadastro?'form-cadastro':'form-login');$('mostrar-cadastro').textContent=cadastro?'Já tenho uma conta':'Criar minha conta';};
 submitSeguro('form-login',async f=>{
   const sessao=await SaaS.auth('token?grant_type=password',{email:f.email.value.trim(),password:f.password.value});
   token=sessao.access_token;
@@ -29,7 +30,7 @@ submitSeguro('form-cadastro',async f=>{
   const sessao=await SaaS.auth('signup?redirect_to='+encodeURIComponent(redirect),{email:f.email.value.trim(),password:f.password.value});
   f.reset();
   if(sessao.access_token){token=sessao.access_token;await abrirBarbearia();}
-  else{aviso('Confira seu e-mail para confirmar o cadastro. Depois entre com e-mail e senha.');$('form-cadastro').hidden=true;$('form-login').hidden=false;}
+  else{aviso('Confira seu e-mail para confirmar o cadastro. Depois entre com e-mail e senha.');mostrarFormulario('form-login');}
 });
 submitSeguro('form-barbearia',async f=>{
   await api('/rest/v1/rpc/saas_criar_barbearia','POST',{nome_loja:f.nome.value.trim(),slug_loja:f.slug.value.trim(),whatsapp_loja:telefoneLoja(f.whatsapp.value)});
@@ -67,7 +68,7 @@ const sairOriginal=$('sair').onclick;
 $('sair').onclick=async()=>{
   const atual=token;
   sairOriginal();lojaAtual=null;
-  $('form-login').hidden=false;$('form-barbearia').hidden=true;$('form-cadastro').hidden=true;$('form-nova-senha').hidden=true;
+  mostrarFormulario('form-login');
   document.querySelector('.admin-topo small').textContent='AGENDA BARBEARIA';
   if(atual)try{await SaaS.auth('logout',{},atual);}catch{aviso('Você saiu deste painel.');}
 };
@@ -75,6 +76,7 @@ $('sair').onclick=async()=>{
 const retorno=new URLSearchParams(location.hash.slice(1));
 if(retorno.has('access_token')){
   token=retorno.get('access_token');history.replaceState(null,'',location.pathname);
-  if(retorno.get('type')==='recovery'){$('form-login').hidden=true;$('form-nova-senha').hidden=false;aviso('Defina sua nova senha.');}
+  if(retorno.get('type')==='recovery'){mostrarFormulario('form-nova-senha');aviso('Defina sua nova senha.');}
   else abrirBarbearia().catch(e=>{token='';aviso(e.message);});
 }
+if(retorno.has('error') || retorno.has('error_description')){history.replaceState(null,'',location.pathname);mostrarFormulario('form-login');aviso('Este link expirou ou já foi usado. Solicite um novo link de recuperação ou confirme seu cadastro pelo e-mail mais recente.');}

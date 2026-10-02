@@ -1,6 +1,13 @@
 async function iniciar() {
   const grade = document.querySelector('.profissionais');
   grade.replaceChildren();
+  if (!new URLSearchParams(location.search).has('barbearia')) {
+    document.querySelector('.logo').hidden = true;
+    document.getElementById('titulo-profissionais').textContent = 'Sua barbearia, sua agenda';
+    document.getElementById('instrucao-profissionais').textContent = 'Cadastre sua barbearia ou entre para gerenciar serviços, profissionais e agendamentos. Clientes devem usar o link enviado pela barbearia.';
+    const entrar = document.createElement('a'); entrar.className = 'profissional'; entrar.href = 'admin.html'; entrar.textContent = 'Entrar ou criar minha conta'; grade.append(entrar);
+    return;
+  }
   try {
     await SaaS.carregar();
     const profissionais = await SaaS.profissionais();
