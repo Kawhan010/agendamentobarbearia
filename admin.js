@@ -1,14 +1,22 @@
 const $ = id => document.getElementById(id);
 const config = window.AGENDA_CONFIG;
-let token = '', demo = false;
+let token = '', demo = false, lojaAtual = null;
 let pausado = false, intervalosProntos = false;
 let servicos = [], expediente = [], bloqueios = [];
 const aviso = mensagem => { $('aviso').textContent = mensagem; };
 const semana = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 async function api(path, method = 'GET', body) {
+  if(path.startsWith('/rest/v1/') && !path.startsWith('/rest/v1/rpc/')) {
+    const match=path.match(/^\/rest\/v1\/([^?]+)(.*)$/);
+    if(['servicos','expediente','bloqueios','reservas','controle_agenda'].includes(match[1])) {
+      if(!lojaAtual)throw new Error('Selecione sua barbearia.');
+      path='/rest/v1/saas_'+match[1]+match[2]+(match[2]?'&':'?')+'barbearia_id=eq.'+lojaAtual.id;
+      if(method==='POST')body={...body,barbearia_id:lojaAtual.id};
+    }
+  }
   const response = await fetch(config.url + path, {method, headers:{apikey:config.publicKey, Authorization:'Bearer ' + token, 'Content-Type':'application/json', Prefer:'return=representation'}, ...(body ? {body:JSON.stringify(body)} : {})});
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(response.status === 401 ? 'Sessão expirada. Saia e entre novamente.' : 'Não foi possível concluir. Confira sua conexão e a permissão do usuário.');
+  if (!response.ok) throw new Error(response.status === 401 ? 'Sessão expirada. Saia e entre novamente.' : data?.message || 'Não foi possível concluir. Confira sua conexão e a permissão do usuário.');
   return data;
 }
 function el(tag, text, className) { const n=document.createElement(tag); n.textContent=text; if(className)n.className=className; return n; }
@@ -23,7 +31,7 @@ async function salvar(tabela, id, dados) {
 async function carregar(){
   if(!demo){[servicos,expediente,bloqueios]=await Promise.all([api('/rest/v1/servicos?select=*&order=preco'),api('/rest/v1/expediente?select=*&order=id'),api('/rest/v1/bloqueios?select=*&order=data')]);}
   await carregarPausa();
-  renderServicos();renderExpediente();renderBloqueios();await renderAgenda();
+  renderServicos();renderExpediente();renderBloqueios();await renderAgenda();if(!demo)await carregarProfissionais();
 }
 function renderServicos(){
   $('lista-servicos').replaceChildren();
@@ -83,19 +91,13 @@ async function renderAgenda(){
   if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':'Nenhum agendamento nesta data.'));
   reservas.forEach(r=>$('lista-agenda').append(linha(r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao('Confirmar',async()=>{await salvar('reservas',r.id,{status:'confirmado'});await renderAgenda();}),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
 }
-$('form-login').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{
-  if(!config.publicKey)throw new Error('Conexão pendente. A chave pública do Supabase ainda não foi configurada.');
-  const f=e.target;const response=await fetch(config.url+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:config.publicKey,'Content-Type':'application/json'},body:JSON.stringify({email:f.email.value,password:f.password.value})});
-  const sessao=await response.json();if(!response.ok)throw new Error('Não foi possível entrar. Confira e-mail e senha.');token=sessao.access_token;
-  const admins=await api('/rest/v1/administradores?select=user_id');if(!admins.length){token='';throw new Error('Este usuário não tem acesso ao painel.');}
-  demo=false;await carregar();$('login').hidden=true;$('painel').hidden=false;$('sair').hidden=false;f.reset();aviso('Conectado ao Supabase.');
-}catch(err){aviso(err.message);}finally{b.disabled=false;}};
+// Login e criação de barbearia são definidos em admin-saas.js.
 $('demonstracao').onclick=async()=>{demo=true;try{servicos=await fetch('catalogo-inicial.json').then(r=>r.json());expediente=semana.map((_,id)=>({id,aberto:id!==1,inicio:'09:00',fim:'18:00'}));bloqueios=[];await carregar();$('login').hidden=true;$('painel').hidden=false;$('sair').hidden=false;aviso('Demonstração: dados de exemplo. Nenhuma alteração é enviada ao Supabase.');}catch{aviso('Abra o site pelo Live Server para carregar a demonstração.');}};
 $('sair').onclick=()=>{token='';demo=false;$('painel').hidden=true;$('login').hidden=false;$('sair').hidden=true;aviso('Você saiu do painel.');};
 for(const b of document.querySelectorAll('[data-area]')) b.onclick=()=>{document.querySelectorAll('.area').forEach(a=>a.hidden=a.id!==b.dataset.area);document.querySelectorAll('[data-area]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));};
 $('form-servico').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const imagem=f.imagem.value.trim();if(imagem&&!/^(assets\/[^\s]+|https:\/\/)/.test(imagem))throw new Error('Use um caminho assets/ ou uma URL HTTPS.');const dados={nome:f.nome.value.trim(),descricao:f.descricao.value.trim(),preco:Number(f.preco.value),categoria:f.categoria.value,imagem,ativo:true};if(!dados.nome)throw new Error('Informe o nome.');await salvar('servicos',f.elements.id.value,dados);if(demo){const old=servicos.find(s=>s.id===f.elements.id.value);if(old)Object.assign(old,dados);else servicos.push({...dados,id:crypto.randomUUID()});}f.reset();$('titulo-editor').textContent='Adicionar serviço';await carregar();}catch(err){aviso(err.message);}finally{b.disabled=false;}};
 $('limpar-servico').onclick=()=>{$('form-servico').reset();$('form-servico').elements.id.value='';$('titulo-editor').textContent='Adicionar serviço';};
-$('form-expediente').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const novos=expediente.map(d=>({id:d.id,aberto:f.elements['aberto-'+d.id].checked,inicio:f.elements['inicio-'+d.id].value,fim:f.elements['fim-'+d.id].value,...(intervalosProntos?{intervalo_inicio:f.elements['intervalo_inicio-'+d.id].value||null,intervalo_fim:f.elements['intervalo_fim-'+d.id].value||null}:{})}));if(novos.some(d=>d.aberto&&d.fim<=d.inicio))throw new Error('O fechamento deve ser depois da abertura.');if(novos.some(d=>(Boolean(d.intervalo_inicio)!==Boolean(d.intervalo_fim))||(d.intervalo_inicio&&(d.intervalo_inicio<d.inicio||d.intervalo_fim>d.fim||d.intervalo_fim<=d.intervalo_inicio))))throw new Error('Preencha as duas horas do intervalo, dentro do expediente e em ordem.');if(!demo)await api('/rest/v1/rpc/salvar_expediente','POST',{dias:novos});expediente=novos;aviso(demo?'Expediente alterado apenas na demonstração.':'Expediente salvo.');}catch(err){aviso(err.message);}finally{b.disabled=false;}};
+$('form-expediente').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const novos=expediente.map(d=>({id:d.id,aberto:f.elements['aberto-'+d.id].checked,inicio:f.elements['inicio-'+d.id].value,fim:f.elements['fim-'+d.id].value,...(intervalosProntos?{intervalo_inicio:f.elements['intervalo_inicio-'+d.id].value||null,intervalo_fim:f.elements['intervalo_fim-'+d.id].value||null}:{})}));if(novos.some(d=>d.aberto&&d.fim<=d.inicio))throw new Error('O fechamento deve ser depois da abertura.');if(novos.some(d=>(Boolean(d.intervalo_inicio)!==Boolean(d.intervalo_fim))||(d.intervalo_inicio&&(d.intervalo_inicio<d.inicio||d.intervalo_fim>d.fim||d.intervalo_fim<=d.intervalo_inicio))))throw new Error('Preencha as duas horas do intervalo, dentro do expediente e em ordem.');if(!demo)await api('/rest/v1/rpc/saas_salvar_expediente','POST',{loja:lojaAtual.id,dias:novos});expediente=novos;aviso(demo?'Expediente alterado apenas na demonstração.':'Expediente salvo.');}catch(err){aviso(err.message);}finally{b.disabled=false;}};
 $('form-bloqueio').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const dados={data:f.data.value,horario:f.horario.value||null,motivo:f.motivo.value};await salvar('bloqueios',null,dados);if(demo)bloqueios.push({...dados,id:crypto.randomUUID()});f.reset();await carregar();}catch(err){aviso(err.message);}finally{b.disabled=false;}};
 $('atualizar').onclick=()=>renderAgenda().catch(e=>aviso(e.message));$('filtro-data').onchange=$('atualizar').onclick;
 const hoje=new Date();$('filtro-data').value=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');

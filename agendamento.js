@@ -21,15 +21,19 @@ cartoes.forEach((cartao) => {
       preco: cartao.querySelector('.preco-servico').textContent,
       servico_id: cartao.dataset.id || '',
     });
+    parametros.set('barbearia',SaaS.loja.slug);
     window.location.href = `horarios.html?${parametros}`;
   });
 });
 }
 async function iniciarCatalogo(){
- if(!AgendaDB.ativa){conectarCartoes();return;}
  const grades=document.querySelectorAll('.grade-servicos');
  grades.forEach(g=>g.replaceChildren());
+ if(!AgendaDB.ativa){grades[0].textContent='O agendamento ainda não foi configurado. Entre em contato com a barbearia.';return;}
  try{
+  const pessoas=await SaaS.profissionais();
+  pessoas.forEach(p=>profissionais.set(p.id,p.nome));
+  document.getElementById('profissional-escolhido').textContent=profissionais.get(escolha)||'Sem preferência';
   const itens=await AgendaDB.request('servicos?select=*&ativo=eq.true&order=preco');
   for(const s of itens){
    const b=document.createElement('button');b.type='button';b.className='servico'+(s.categoria==='combo'?' combo':'');b.dataset.id=s.id;b.dataset.servico=s.nome;

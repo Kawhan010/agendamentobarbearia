@@ -12,6 +12,7 @@ const mudarDia = document.getElementById('mudar-dia');
 const tituloHorarios = document.getElementById('titulo-horarios');
 const hoje = new Date();
 const remotos = new Map();
+if(!AgendaDB.ativa){statusHorario.textContent='O agendamento ainda não foi configurado. Entre em contato com a barbearia.';return;}
 if(AgendaDB.ativa){
  statusHorario.textContent='Consultando a agenda…';
  try{
