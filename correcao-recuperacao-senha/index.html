@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agendamento</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <meta name="referrer" content="no-referrer">
+  <script src="supabase-config.js" defer></script>
+  <script src="recuperar-senha.js" defer></script>
+</head>
+<body>
+  <header class="cabecalho">
+    <img class="logo" src="assets/barbearia%20Sales.jpg" alt="Barbearia Sales">
+    <h1>Agendamento</h1>
+  </header>
+  <main class="agendamento">
+    <section class="selecao-profissionais" aria-labelledby="titulo-profissionais">
+      <h2 id="titulo-profissionais">Escolha seu cabeleireiro</h2>
+      <p id="instrucao-profissionais">Selecione quem vai cuidar do seu visual.</p>
+      <!-- Substitua as opções provisórias pelos nomes dos profissionais. -->
+      <div class="profissionais">
+        <a class="profissional" href="agendamento.html?cabeleireiro=profissional-1">
+          <span class="profissional-info">
+            <strong>Josuell Salles</strong>
+            <span>Cabeleireiro</span>
+          </span>
+        </a>
+        <a class="profissional" href="agendamento.html?cabeleireiro=profissional-2">
+          <span class="profissional-info">
+            <strong>Profissional 2</strong>
+            <span>Cabeleireiro</span>
+          </span>
+        </a>
+                <a class="profissional" href="agendamento.html?cabeleireiro=sem-preferencia">
+          <span class="avatar" aria-hidden="true">✂</span>
+          <span class="profissional-info">
+            <strong>Sem preferência</strong>
+            <span>Qualquer profissional</span>
+          </span>
+        </a>
+      </div>
+    </section>
+  </main>
+  <footer class="agendamento"><a class="voltar" href="admin.html">Área do barbeiro</a></footer>
+</body>
+</html>

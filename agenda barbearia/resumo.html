@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resumo — Barbearia Sales</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="supabase-config.js" defer></script>
+  <script src="agenda-db.js" defer></script>
+  <script src="resumo.js" defer></script>
+</head>
+<body>
+  <header class="cabecalho">
+    <img class="logo" src="assets/barbearia%20Sales.jpg" alt="Barbearia Sales">
+    <h1>Resumo do agendamento</h1>
+  </header>
+  <main class="agendamento">
+    <a class="voltar" id="voltar-servicos" href="horarios.html">← Voltar aos horários</a>
+    <section class="selecao-profissionais" aria-labelledby="titulo-resumo">
+      <h2 id="titulo-resumo">Sua escolha</h2>
+      <dl class="detalhes-resumo">
+        <dt>Cabeleireiro</dt><dd id="resumo-profissional">Não selecionado</dd>
+        <dt>Serviço ou combo</dt><dd id="resumo-escolha">Não selecionado</dd>
+        <dt>Valor</dt><dd id="resumo-preco">—</dd>
+        <dt>Data e horário</dt><dd id="resumo-horario">Não selecionados</dd>
+      </dl>
+      <form id="dados-cliente" class="dados-cliente">
+        <h2>Seus dados</h2>
+        <label for="nome-cliente">Nome do cliente</label>
+        <input id="nome-cliente" name="nome" type="text" autocomplete="name" placeholder="Digite seu nome" required maxlength="100">
+        <label for="telefone-cliente">Telefone / WhatsApp</label>
+        <input id="telefone-cliente" name="telefone" type="tel" autocomplete="tel-national" inputmode="tel" placeholder="(11) 99999-9999" required maxlength="15" pattern="\([0-9]{2}\) [0-9]{4,5}-[0-9]{4}" aria-describedby="ajuda-telefone">
+        <small id="ajuda-telefone">Informe o número com DDD.</small>
+        <button class="botao-continuar" type="submit">Solicitar pelo WhatsApp</button>
+        <details class="cancelamento">
+          <summary>Precisa cancelar este atendimento?</summary>
+          <p>Confira os dados acima. O botão abre um pedido de cancelamento no WhatsApp para você enviar ao barbeiro.</p>
+          <button class="botao-cancelar" type="submit" name="acao" value="cancelar">Solicitar cancelamento</button>
+          <small>O cancelamento depende da confirmação do barbeiro.</small>
+        </details>
+        <p id="status-cliente" role="status">A mensagem será aberta no WhatsApp para você enviar. Aguarde a confirmação do barbeiro.</p>
+      </form>
+    </section>
+  </main>
+</body>
+</html>
+

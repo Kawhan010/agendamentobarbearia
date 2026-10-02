@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seu agendamento — Barbearia Sales</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="supabase-config.js" defer></script>
+  <script src="agenda-db.js" defer></script>
+  <script src="agendamento.js" defer></script>
+</head>
+<body>
+  <header class="cabecalho">
+    <img class="logo" src="assets/barbearia%20Sales.jpg" alt="Barbearia Sales">
+    <h1>Seu agendamento</h1>
+  </header>
+  <main class="agendamento">
+    <section class="selecao-profissionais profissional-atual" aria-labelledby="profissional-escolhido">
+      <div class="profissional-atual-linha">
+      <h2 id="profissional-escolhido">Escolha um cabeleireiro para começar</h2>
+      <a class="voltar trocar-profissional" href="index.html">Trocar cabeleireiro</a>
+      </div>
+    </section>
+    <section class="catalogo" aria-labelledby="titulo-servicos">
+      <header class="cabecalho-catalogo">
+      <span class="etiqueta">Seu cuidado, sua escolha</span>
+      <h2 id="titulo-servicos">Serviços individuais</h2>
+      <p>Escolha um serviço ou um dos combos abaixo.</p>
+      </header>
+      <div class="grade-servicos">
+        <button class="servico" type="button" aria-pressed="false" data-servico="Pezinho"><img class="imagem-servico" src="assets/pezinho.jpg" alt="" loading="lazy"><span class="etiqueta">Acabamento</span><strong>Pezinho</strong><span class="preco-servico">R$ 10,00</span><span>Contorno e acabamento do cabelo.</span></button>
+        <button class="servico" type="button" aria-pressed="false" data-servico="Sobrancelha"><img class="imagem-servico" src="assets/sobrancelha.jpg" alt="" loading="lazy"><span class="etiqueta">Detalhes</span><strong>Sobrancelha</strong><span class="preco-servico">R$ 10,00</span><span>Limpeza e definição do desenho.</span></button>
+        <button class="servico" type="button" aria-pressed="false" data-servico="Barba"><img class="imagem-servico" src="assets/barba.jpg" alt="" loading="lazy"><span class="etiqueta">Barbearia</span><strong>Barba</strong><span class="preco-servico">R$ 20,00</span><span>Desenho e acabamento da barba.</span></button>
+        <button class="servico" type="button" aria-pressed="false" data-servico="Corte"><img class="imagem-servico" src="assets/corte.jpg" alt="" loading="lazy"><span class="etiqueta">Cabelo</span><strong>Corte</strong><span class="preco-servico">R$ 30,00</span><span>Um corte para o seu estilo.</span></button>
+        <button class="servico" type="button" aria-pressed="false" data-servico="Botox capilar"><img class="imagem-servico" src="assets/botox.png" alt="" loading="lazy"><span class="etiqueta">Tratamento</span><strong>Botox capilar</strong><span class="preco-servico">R$ 80,00</span><span>Cuidado e tratamento dos fios.</span></button>
+      </div>
+    </section>
+    <section class="catalogo catalogo-combos" aria-labelledby="titulo-combos">
+      <header class="cabecalho-catalogo">
+      <span class="etiqueta">Cuidados que se completam</span>
+      <h2 id="titulo-combos">Combos</h2>
+      <p>Combine até três serviços no mesmo atendimento.</p>
+      </header>
+      <div class="grade-servicos">
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Barba + sobrancelha"><img class="imagem-servico" src="assets/barba.jpg" alt="" loading="lazy"><span class="etiqueta">2 serviços</span><strong>Barba + sobrancelha</strong><span class="preco-servico">R$ 25,00</span><span>Desenho da barba e definição da sobrancelha.</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Barba + pezinho"><img class="imagem-servico" src="assets/barba.jpg" alt="" loading="lazy"><span class="etiqueta">2 serviços</span><strong>Barba + pezinho</strong><span class="preco-servico">R$ 30,00</span><span>Desenho da barba e acabamento do cabelo.</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Em dia: pezinho + barba + sobrancelha"><img class="imagem-servico" src="assets/pezinho.jpg" alt="" loading="lazy"><span class="etiqueta">3 serviços</span><strong>Em dia</strong><span class="preco-servico">R$ 35,00</span><span>Pezinho + barba + sobrancelha</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Cabelo + sobrancelha"><img class="imagem-servico" src="assets/corte.jpg" alt="" loading="lazy"><span class="etiqueta">2 serviços</span><strong>Cabelo + sobrancelha</strong><span class="preco-servico">R$ 35,00</span><span>Corte de cabelo e definição da sobrancelha.</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Clássico: corte + barba"><img class="imagem-servico" src="assets/corte.jpg" alt="" loading="lazy"><span class="etiqueta">2 serviços</span><strong>Clássico</strong><span class="preco-servico">R$ 45,00</span><span>Corte + barba</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Visual completo: corte + barba + sobrancelha"><img class="imagem-servico" src="assets/corte.jpg" alt="" loading="lazy"><span class="etiqueta">3 serviços</span><strong>Visual completo</strong><span class="preco-servico">R$ 50,00</span><span>Corte + barba + sobrancelha</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Renovação: botox capilar + corte"><img class="imagem-servico" src="assets/botox.png" alt="" loading="lazy"><span class="etiqueta">2 serviços</span><strong>Renovação</strong><span class="preco-servico">R$ 90,00</span><span>Botox capilar + corte</span></button>
+        <button class="servico combo" type="button" aria-pressed="false" data-servico="Botox + corte + barba"><img class="imagem-servico" src="assets/botox.png" alt="" loading="lazy"><span class="etiqueta">3 serviços</span><strong>Botox + corte + barba</strong><span class="preco-servico">R$ 100,00</span><span>Botox capilar, corte de cabelo e desenho da barba.</span></button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
