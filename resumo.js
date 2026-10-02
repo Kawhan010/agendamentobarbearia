@@ -57,9 +57,19 @@ formulario.addEventListener('input', () => {
 });
 
 let enviando = false;
+let pronto = false, reservado = false;
+const botoesIniciais = formulario.querySelectorAll('button');
+botoesIniciais.forEach(b=>b.disabled=true);
+SaaS.profissionais().then(pessoas=>{
+  profissionais.clear(); profissionais.set('sem-preferencia','Sem preferência');
+  pessoas.forEach(p=>profissionais.set(p.id,p.nome));
+  document.getElementById('resumo-profissional').textContent=profissionais.get(profissional)||'Não selecionado';
+  pronto=true; botoesIniciais.forEach(b=>b.disabled=false);
+}).catch(e=>{statusCliente.textContent=e.message;});
 formulario.addEventListener('submit', async (evento) => {
   evento.preventDefault();
-  if (enviando) return;
+  if (enviando || !pronto) return;
+  if(reservado && evento.submitter?.value !== 'cancelar'){statusCliente.textContent='Seu horário já foi reservado. Consulte a barbearia pelo WhatsApp.';return;}
   const cancelar = evento.submitter?.value === 'cancelar';
   nome.setCustomValidity(nome.value.trim() ? '' : 'Informe seu nome.');
   const digitos = telefone.value.replace(/\D/g, '');
@@ -89,6 +99,7 @@ formulario.addEventListener('submit', async (evento) => {
     `⌚ HORÁRIO ${horarioEscolhido}:00`,
     '',
     '💇🏽‍♂️ *PROFISSIONAL*',
+
     profissionais.get(profissional),
     '',
     '✂️ *SERVIÇO*',
@@ -96,7 +107,7 @@ formulario.addEventListener('submit', async (evento) => {
     '',
     'Gostaria de cancelar este atendimento. Pode confirmar o cancelamento?',
   ].join('\n');
-  const linkCancelamento = `https://wa.me/557998815390?text=${encodeURIComponent(mensagemCancelamento)}`;
+  const linkCancelamento = `https://wa.me/${SaaS.loja.whatsapp}?text=${encodeURIComponent(mensagemCancelamento)}`;
   if (cancelar) {
     statusCliente.textContent = 'Envie o pedido no WhatsApp e aguarde a confirmação do cancelamento.';
     window.location.href = linkCancelamento;
@@ -113,6 +124,7 @@ formulario.addEventListener('submit', async (evento) => {
         dia: dataEscolhida, hora: horarioEscolhido, barbeiro: profissional,
         servico: parametros.get('servico_id'), nome: nome.value.trim(), telefone_cliente: numeroLocal,
       });
+      reservado=true;
       profissionalFinal = profissionais.get(reserva.profissional);
       parametros.set('servico', reserva.nome);
       parametros.set('preco', Number(reserva.preco).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}));
@@ -127,7 +139,7 @@ formulario.addEventListener('submit', async (evento) => {
     }
   }
   const mensagem = [
-    '📆 *MEU AGENDAMENTO*',
+    '🗓️ *MEU AGENDAMENTO*',
     `👥 CLIENTE: *${nome.value.trim()}*`,
     `📞 TELEFONE: ${telefone.value.replace(/\D/g, '')}`,
     '=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=',
@@ -144,11 +156,11 @@ formulario.addEventListener('submit', async (evento) => {
     '',
     '*CASO DESEJE CANCELAR O AGENDAMENTO*',
     '❌ Abra o link abaixo e envie o pedido de cancelamento:',
-    'https://wa.me/5579996776478?text=Quero%20cancelar%20meu%20agendamento',
+    `https://wa.me/${SaaS.loja.whatsapp}?text=Quero%20cancelar%20meu%20agendamento`,
     '',
     '*SOLICITAÇÃO DE AGENDAMENTO*',
     'Aguardando confirmação do barbeiro.',
   ].join('\n');
   statusCliente.textContent = 'Envie a mensagem no WhatsApp e aguarde a confirmação do barbeiro.';
-  window.location.href = `https://wa.me/557998815390?text=${encodeURIComponent(mensagem)}`;
+  window.location.href = `https://wa.me/${SaaS.loja.whatsapp}?text=${encodeURIComponent(mensagem)}`;
 });
