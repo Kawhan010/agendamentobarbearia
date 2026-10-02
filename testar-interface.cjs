@@ -22,7 +22,7 @@ async function abrir(page,query='?barbearia=loja-teste'){
   if(url.includes('saas_bloqueios')||url.includes('saas_reservas'))return response([]);
   throw new Error('Requisição inesperada: '+url);
  };
- for(const script of w.document.querySelectorAll('script[src]'))require('node:vm').runInContext(fs.readFileSync(script.getAttribute('src'),'utf8'),dom.getInternalVMContext());
+ for(const script of w.document.querySelectorAll('script[src]'))require('node:vm').runInContext(fs.readFileSync(script.getAttribute('src').split('?')[0],'utf8'),dom.getInternalVMContext());
  await new Promise(r=>setTimeout(r,100));
  return dom;
 }
