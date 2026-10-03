@@ -1,0 +1,65 @@
+:root {
+  --superficie: #ffffff;
+  --superficie-suave: #eae8e5;
+  --texto-secundario: #606068;
+  --link-tema: #262878;
+  --destaque-legivel: #ba2530;
+  --texto-principal: #ffffff;
+  --texto-destaque: #ffffff;
+  --borda-tema: #858585;
+  --borda-suave: #d8d6d3;
+  --hover-tema: #eeedf7;
+  --brilho-tema: #26287808;
+  --sombra-tema: #00000018;
+  --foco-tema: #262878;
+}
+
+/* Somente cores: tamanhos, disposição e navegação permanecem no modelo original. */
+body {background: radial-gradient(ellipse at 50% 0%, var(--brilho-tema), transparent 60%), var(--fundo); color: var(--texto);}
+button, a, input, label {-webkit-tap-highlight-color: var(--hover-tema);}
+a {color: var(--link-tema);}
+.cabecalho, .admin-topo {border-color: var(--borda-suave);}
+.cabecalho::after {background: linear-gradient(90deg, var(--vermelho) 0% 33%, var(--superficie) 33% 66%, var(--azul) 66% 100%);}
+.logo {background: var(--superficie); border-color: var(--azul); box-shadow: 0 16px 40px var(--sombra-tema);}
+.dia-escolhido, .cabecalho-catalogo, .admin-aviso {background: var(--superficie-suave); border-color: var(--borda-suave);}
+.cabecalho-catalogo::before {background: var(--vermelho);}
+.profissional, .servico, .botao-horario, .horario span, .dados-cliente input:not([type="radio"]), .cancelamento, .detalhes-resumo,
+.admin-topo, .admin-card, .linha-item, .admin-main input, .admin-main select, .admin-main textarea, .admin-main button, .admin-topo button, .mudar-dia {
+  background: var(--superficie); color: var(--texto); border-color: var(--borda-tema);
+}
+.profissional:hover, .profissional:active, .servico:hover, .servico[aria-pressed="true"], .admin-main button:hover {background: var(--hover-tema); border-color: var(--azul);}
+.profissional:active {box-shadow: inset 0 0 0 1px var(--azul);}
+.profissional-info > span, .selecao-profissionais p, .catalogo > p, .trocar-profissional,
+.cabecalho-catalogo p, .cabecalho-catalogo .etiqueta, .servico > span:not(.etiqueta):not(.acao-servico),
+.dados-cliente small, .detalhes-resumo dt, .admin-main p, .admin-topo small {color: var(--texto-secundario);}
+.etiqueta, .voltar, .trocar-profissional:hover, .servico > .preco-servico, .acao-servico,
+.detalhes-resumo dd:last-child, .mudar-dia, .admin-main button, .admin-topo button {color: var(--link-tema);}
+.avatar, .resumo-servico {background: var(--superficie-suave); color: var(--link-tema);}
+.combo {background: var(--superficie);}
+.botao-continuar, .admin-main .primario, .admin-nav button[aria-pressed="true"],
+.botao-horario:hover, .horario input:checked + span {
+  background: var(--azul); color: var(--texto-principal); border-color: var(--azul);
+}
+.botao-continuar {border-bottom-color: var(--vermelho); box-shadow: 0 4px 12px var(--sombra-tema);}
+.admin-main .primario:hover {background: var(--vermelho); color: var(--texto-destaque); border-color: var(--vermelho);}
+.admin-nav button[aria-pressed="true"]:hover {background: var(--azul); color: var(--texto-principal);}
+.botao-continuar:hover:not(:disabled) {background: var(--vermelho); color: var(--texto-destaque); border-color: var(--vermelho); border-bottom-color: var(--azul);}
+.horario.dia > span {background: var(--superficie); color: var(--texto);}
+.horario.dia input:checked + span {background: var(--azul); color: var(--texto-principal);}
+.botao-continuar:disabled, .horario.dia input:disabled + span {background: var(--superficie-suave); color: var(--texto-secundario); border-color: var(--borda-suave);}
+.cancelamento summary, .botao-cancelar, #alternar-pausa {color: var(--destaque-legivel); border-color: var(--vermelho);}
+.botao-cancelar:hover {background: var(--superficie-suave);}
+.dia-expediente {border-color: var(--borda-suave);}
+.admin-main input, .admin-main select, .admin-main textarea {accent-color: var(--azul);}
+.profissional:focus-visible, .voltar:focus-visible, .servico:focus-visible, .botao-continuar:focus-visible,
+.botao-horario:focus-visible, .mudar-dia:focus-visible, .dados-cliente input:focus-visible, .botao-cancelar:focus-visible,
+.cancelamento summary:focus-visible, .admin-main :focus-visible {outline-color: var(--foco-tema);}
+.horario input:focus-visible + span {outline-color: var(--foco-tema);}
+
+.cores-personalizacao {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 0; border: 0;}
+.admin-main .cores-personalizacao input[type="color"] {height: 64px; padding: 6px; cursor: pointer;}
+.cores-personalizacao output {font-family: monospace; font-size: 0.8rem; color: var(--texto-secundario);}
+.acoes-personalizacao {display: flex; flex-wrap: wrap; gap: 12px;}
+.admin-main .status-personalizacao {margin: 0; min-height: 1.5em;}
+@media (max-width: 600px) {.cores-personalizacao {grid-template-columns: 1fr;}}
+@media (max-width: 700px) {.admin-nav button {flex: 1 1 140px;}}

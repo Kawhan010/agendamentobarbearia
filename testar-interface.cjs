@@ -1,6 +1,6 @@
 const {JSDOM}=require(require('node:path').join(process.argv[2],'node_modules/jsdom'));
 const fs=require('node:fs'),assert=require('node:assert/strict');
-const loja={id:'10000000-0000-4000-8000-000000000001',slug:'loja-teste',nome:'Loja Teste',whatsapp:'5579999999999',logo:''};
+const loja={id:'10000000-0000-4000-8000-000000000001',slug:'loja-teste',nome:'Loja Teste',whatsapp:'5579999999999',logo:'',cor_principal:'#14532d',cor_destaque:'#d97706',cor_fundo:'#fffaf0'};
 const requests=[];
 function response(data){return {ok:true,status:200,json:async()=>data};}
 async function abrir(page,query='?barbearia=loja-teste'){
@@ -13,7 +13,8 @@ async function abrir(page,query='?barbearia=loja-teste'){
   if(url.includes('/auth/v1/token'))return response({access_token:'token-teste'});
   if(url.includes('/auth/v1/'))return response({});
   if(url.includes('saas_membros'))return response([{barbearia_id:loja.id}]);
-  if(url.includes('saas_barbearias'))return response([loja]);
+  if(url.includes('saas_barbearias')){if(options.method==='PATCH')Object.assign(loja,JSON.parse(options.body));return response([{...loja}]);}
+  if(url==='catalogo-inicial.json')return response([{nome:'Corte',preco:30,categoria:'individual',ativo:true}]);
   if(url.includes('saas_profissionais'))return response([{id:'profissional-teste',nome:'Barbeiro Teste',ativo:true}]);
   if(url.includes('saas_servicos'))return response([{id:'servico-teste',nome:'Corte',preco:30,categoria:'individual',imagem:'',descricao:'',ativo:true}]);
   if(url.includes('saas_expediente'))return response(Array.from({length:7},(_,id)=>({id,aberto:true,inicio:'09:00',fim:'18:00',intervalo_inicio:null,intervalo_fim:null})));
@@ -29,6 +30,7 @@ async function abrir(page,query='?barbearia=loja-teste'){
 (async()=>{
  let dom=await abrir('index.html');
  assert.equal(dom.window.document.querySelector('.cabecalho h1').textContent,loja.nome);
+ assert.equal(dom.window.document.documentElement.style.getPropertyValue('--azul'),loja.cor_principal);
  assert.equal(dom.window.document.querySelectorAll('.profissional').length,2);
  assert.ok(dom.window.document.querySelector('.profissional').href.includes('barbearia=loja-teste'));
  dom.window.close();
@@ -39,6 +41,7 @@ async function abrir(page,query='?barbearia=loja-teste'){
  dom=await abrir('agendamento.html','?barbearia=loja-teste&cabeleireiro=profissional-teste');
  assert.equal(dom.window.document.getElementById('profissional-escolhido').textContent,'Barbeiro Teste');
  assert.equal(dom.window.document.querySelectorAll('[data-servico]').length,1);
+ assert.equal(dom.window.document.documentElement.style.getPropertyValue('--fundo'),loja.cor_fundo);
  dom.window.close();
  dom=await abrir('horarios.html','?barbearia=loja-teste&cabeleireiro=profissional-teste&servico=Corte&preco=30&servico_id=servico-teste');
  assert.equal(dom.window.document.querySelectorAll('#grade-dias input').length,15);
@@ -56,9 +59,52 @@ async function abrir(page,query='?barbearia=loja-teste'){
  assert.equal(w.document.getElementById('nome-barbearia').textContent,loja.nome);
  assert.ok(w.document.getElementById('link-agendamento').href.includes('barbearia=loja-teste'));
  assert.equal(w.document.getElementById('lista-profissionais').children.length,1);
+ assert.equal(w.document.querySelectorAll('#form-personalizacao input[type="color"]').length,3);
+ w.document.querySelector('[data-area="personalizacao"]').onclick();
+ assert.equal(w.document.getElementById('personalizacao').hidden,false);
+ const cores=w.document.getElementById('form-personalizacao');
+ cores.elements.cor_principal.value='#7c3aed';cores.oninput();
+ assert.equal(w.document.documentElement.style.getPropertyValue('--azul'),'#7c3aed');
+ w.document.getElementById('descartar-cores').onclick();
+ assert.equal(w.document.documentElement.style.getPropertyValue('--azul'),loja.cor_principal);
+ cores.elements.cor_principal.value='#7c3aed';
+ cores.elements.cor_destaque.value='#f59e0b';
+ cores.elements.cor_fundo.value='#141414';
+ await cores.onsubmit({preventDefault(){},submitter:cores.querySelector('button'),target:cores});
+ const salvo=requests.findLast(r=>r.options.method==='PATCH'&&r.url.includes('saas_barbearias'));
+ assert.ok(salvo.url.includes('id=eq.'+loja.id));
+ assert.deepEqual(Object.keys(JSON.parse(salvo.options.body)).sort(),['cor_destaque','cor_fundo','cor_principal']);
+ assert.equal(loja.cor_principal,'#7c3aed');
+ assert.ok(w.document.getElementById('aviso').textContent.includes('Cores salvas'));
+ const antesFalha=w.fetch;
+ w.fetch=async(url,options)=>url.includes('saas_barbearias')&&options?.method==='PATCH'?response([]):antesFalha(url,options);
+ cores.elements.cor_principal.value='#ffffff';
+ await cores.onsubmit({preventDefault(){},submitter:cores.querySelector('button'),target:cores});
+ assert.ok(w.document.getElementById('aviso').textContent.includes('não foram salvas'));
+ assert.equal(loja.cor_principal,'#7c3aed');
+ assert.equal(w.document.getElementById('campos-cores').disabled,false);
+ w.fetch=antesFalha;
+ w.document.getElementById('restaurar-cores').onclick();
+ assert.equal(w.document.documentElement.style.getPropertyValue('--azul'),w.Tema.padrao.cor_principal);
+ assert.equal(loja.cor_principal,'#7c3aed');
+ w.document.getElementById('descartar-cores').onclick();
+ assert.equal(w.document.documentElement.style.getPropertyValue('--azul'),'#7c3aed');
+ assert.throws(()=>w.Tema.validar({cor_principal:'url(x)',cor_destaque:'#000000',cor_fundo:'#ffffff'}));
+ const paletas=['#ffffff','#000000','#777777','#747474','#ffff00','#ff0000','#00ffff','#14532d','#7c3aed'];
+ for(const fundo of paletas)for(const principal of paletas){
+   w.Tema.aplicar({cor_principal:principal,cor_destaque:'#ffff00',cor_fundo:fundo});
+   const valor=nome=>w.document.documentElement.style.getPropertyValue(nome);
+   for(const superficie of ['--fundo','--superficie','--superficie-suave','--hover-tema']){
+     for(const texto of ['--texto','--texto-secundario','--link-tema','--destaque-legivel'])assert.ok(w.Tema.contraste(valor(texto),valor(superficie))>=4.5);
+   }
+   assert.ok(w.Tema.contraste(valor('--texto-principal'),principal)>=4.5);
+   assert.ok(w.Tema.contraste(valor('--texto-destaque'),'#ffff00')>=4.5);
+ }
+ w.document.getElementById('descartar-cores').onclick();
  assert.ok(requests.some(r=>r.url.includes('saas_reservas')&&r.url.includes('barbearia_id=eq.'+loja.id)));
  await w.document.getElementById('sair').onclick();
  assert.equal(w.document.getElementById('painel').hidden,true);
+ assert.equal(w.document.documentElement.style.getPropertyValue('--azul'),w.Tema.padrao.cor_principal);
  w.document.getElementById('mostrar-cadastro').onclick();
  assert.equal(w.document.getElementById('form-cadastro').hidden,false);
  assert.equal(w.document.getElementById('form-login').hidden,true);

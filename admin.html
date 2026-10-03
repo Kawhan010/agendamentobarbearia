@@ -6,10 +6,12 @@
   <title>Painel da barbearia</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="tema.css?v=20261003-cores">
+  <script src="tema.js?v=20261003-cores" defer></script>
   <script src="supabase-config.js" defer></script>
-  <script src="saas.js?v=20261002-2" defer></script>
+  <script src="saas.js?v=20261003-cores" defer></script>
   <script src="admin.js" defer></script>
-  <script src="admin-saas.js?v=20261002-2" defer></script>
+  <script src="admin-saas.js?v=20261003-cores" defer></script>
 </head>
 <body>
   <header class="admin-topo"><a href="index.html"><img src="assets/barbearia%20Sales.jpg" alt="Barbearia Salles" width="56" height="56"></a><div><small>AGENDA BARBEARIA</small><h1>Painel do barbeiro</h1></div><button id="sair" hidden>Sair</button></header>
@@ -26,13 +28,27 @@
     </section>
     <div id="painel" hidden>
       <section class="admin-card"><h2 id="nome-barbearia"></h2><p>Compartilhe com seus clientes: <a id="link-agendamento" target="_blank" rel="noopener"></a></p></section>
-      <nav class="admin-nav" aria-label="Áreas do painel"><button data-area="agenda" aria-pressed="true">Agendamentos</button><button data-area="servicos" aria-pressed="false">Serviços e preços</button><button data-area="horarios" aria-pressed="false">Horários</button><button data-area="configuracoes" aria-pressed="false">Barbearia e profissionais</button></nav>
+      <nav class="admin-nav" aria-label="Áreas do painel"><button data-area="agenda" aria-pressed="true">Agendamentos</button><button data-area="servicos" aria-pressed="false">Serviços e preços</button><button data-area="horarios" aria-pressed="false">Horários</button><button data-area="configuracoes" aria-pressed="false">Barbearia e profissionais</button><button data-area="personalizacao" aria-pressed="false">Personalização</button></nav>
       <section id="agenda" class="area"><div class="admin-titulo"><div><span class="etiqueta">Sua rotina</span><h2>Agendamentos</h2></div><label>Dia<input id="filtro-data" type="date"></label><button id="atualizar">Atualizar</button></div><div id="lista-agenda" class="admin-lista"></div></section>
       <section id="servicos" class="area" hidden><div class="admin-titulo"><div><span class="etiqueta">Seu catálogo</span><h2>Serviços e preços</h2></div></div><div class="admin-colunas"><form id="form-servico" class="admin-card"><h3 id="titulo-editor">Adicionar serviço</h3><input type="hidden" name="id"><label>Nome<input name="nome" maxlength="100" required></label><label>Descrição<textarea name="descricao" maxlength="300"></textarea></label><div class="dupla"><label>Preço (R$)<input name="preco" type="number" min="0.01" step="0.01" required></label><label>Categoria<select name="categoria"><option value="individual">Individual</option><option value="combo">Combo</option></select></label></div><label>Imagem (caminho ou URL HTTPS)<input name="imagem" placeholder="assets/corte.jpg"></label><button class="primario">Salvar serviço</button><button type="button" id="limpar-servico">Novo serviço</button></form><div id="lista-servicos" class="admin-lista"></div></div></section>
       <section id="horarios" class="area" hidden><div class="admin-titulo"><div><span class="etiqueta">Expediente e folgas</span><h2>Horários de trabalho</h2></div></div><section class="admin-card"><h3>Recebimento de agendamentos</h3><p id="estado-pausa" role="status">Consultando expediente…</p><button id="alternar-pausa" type="button" disabled>Pausar expediente</button><p>A pausa bloqueia novas reservas para toda a barbearia até você retomar. Não cancela atendimentos já agendados.</p></section><form id="form-expediente" class="admin-card"><p>Atendimentos de 40 minutos. Desmarque os dias em que a barbearia não abre. Para almoço ou descanso, preencha início e fim do intervalo; deixe ambos vazios se não houver intervalo.</p><div id="dias-semana"></div><button class="primario">Salvar expediente</button></form><form id="form-bloqueio" class="admin-card"><h3>Bloquear uma data ou horário</h3><div class="dupla"><label>Data<input name="data" type="date" required></label><label>Horário (vazio = dia inteiro)<input name="horario" type="time"></label></div><label>Motivo<input name="motivo" maxlength="200" placeholder="Folga, compromisso…"></label><button>Adicionar bloqueio</button></form><div id="lista-bloqueios" class="admin-lista"></div></section>
       <section id="configuracoes" class="area" hidden>
         <form id="form-configuracoes" class="admin-card"><h2>Minha barbearia</h2><label>Nome<input name="nome" maxlength="100" required></label><label>WhatsApp com DDD<input name="whatsapp" required></label><label>Logo (URL HTTPS)<input name="logo" type="url" placeholder="https://..."></label><button class="primario">Salvar dados</button></form>
         <form id="form-profissional" class="admin-card"><h2>Profissionais</h2><label>Nome<input name="nome" maxlength="100" required></label><button>Adicionar profissional</button></form><div id="lista-profissionais" class="admin-lista"></div>
+      </section>
+      <section id="personalizacao" class="area" hidden>
+        <form id="form-personalizacao" class="admin-card">
+          <h2>Cores da sua barbearia</h2>
+          <p>Escolha até três cores. Todas as barbearias usam o mesmo modelo de site, com as cores da sua marca.</p>
+          <fieldset id="campos-cores" class="cores-personalizacao">
+            <label>Cor principal<input id="cor-principal" name="cor_principal" type="color" value="#262878"><output id="cor_principal-valor" for="cor-principal">#262878</output></label>
+            <label>Cor de destaque<input id="cor-destaque" name="cor_destaque" type="color" value="#ba2530"><output id="cor_destaque-valor" for="cor-destaque">#BA2530</output></label>
+            <label>Cor de fundo<input id="cor-fundo" name="cor_fundo" type="color" value="#f5f3f1"><output id="cor_fundo-valor" for="cor-fundo">#F5F3F1</output></label>
+          </fieldset>
+          <p id="status-personalizacao" class="status-personalizacao" role="status">Estas cores aparecem no painel e no seu link de agendamento.</p>
+          <div class="acoes-personalizacao"><button type="submit" class="primario">Salvar cores</button><button type="button" id="descartar-cores">Descartar prévia</button><button type="button" id="restaurar-cores">Restaurar padrão</button></div>
+          <p>Os textos se ajustam automaticamente para facilitar a leitura.</p>
+        </form>
       </section>
     </div>
   </main>

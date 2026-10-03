@@ -10,6 +10,7 @@ async function abrirBarbearia() {
   const lojas=await api('/rest/v1/saas_barbearias?select=*&id=eq.'+membros[0].barbearia_id);
   if(!lojas.length)throw new Error('Barbearia não encontrada.');
   lojaAtual=lojas[0];demo=false;
+  carregarPersonalizacao();
   $('nome-barbearia').textContent=lojaAtual.nome;
   document.querySelector('.admin-topo small').textContent=lojaAtual.nome;
   const link=new URL('index.html',location.href);link.searchParams.set('barbearia',lojaAtual.slug);
@@ -23,7 +24,7 @@ $('mostrar-cadastro').onclick=()=>{const cadastro=$('form-cadastro').hidden;most
 submitSeguro('form-login',async f=>{
   const sessao=await SaaS.auth('token?grant_type=password',{email:f.email.value.trim(),password:f.password.value});
   token=sessao.access_token;
-  try{await abrirBarbearia();f.reset();}catch(e){token='';lojaAtual=null;throw e;}
+  try{await abrirBarbearia();f.reset();}catch(e){token='';lojaAtual=null;Tema.aplicar(Tema.padrao);throw e;}
 });
 submitSeguro('form-cadastro',async f=>{
   const redirect=new URL('admin.html',location.href).href;
@@ -68,6 +69,7 @@ const sairOriginal=$('sair').onclick;
 $('sair').onclick=async()=>{
   const atual=token;
   sairOriginal();lojaAtual=null;
+  Tema.aplicar(Tema.padrao);
   mostrarFormulario('form-login');
   document.querySelector('.admin-topo small').textContent='AGENDA BARBEARIA';
   if(atual)try{await SaaS.auth('logout',{},atual);}catch{aviso('Você saiu deste painel.');}
@@ -80,3 +82,45 @@ if(retorno.has('access_token')){
   else abrirBarbearia().catch(e=>{token='';aviso(e.message);});
 }
 if(retorno.has('error') || retorno.has('error_description')){history.replaceState(null,'',location.pathname);mostrarFormulario('form-login');aviso('Este link expirou ou já foi usado. Solicite um novo link de recuperação ou confirme seu cadastro pelo e-mail mais recente.');}
+
+function carregarPersonalizacao() {
+  const cores=Tema.aplicar(demo?Tema.padrao:lojaAtual);
+  const f=$('form-personalizacao');
+  for(const campo of Tema.campos) {
+    f.elements[campo].value=cores[campo];
+    $(campo+'-valor').textContent=cores[campo].toUpperCase();
+  }
+  $('status-personalizacao').textContent='Estas cores aparecem no painel e no seu link de agendamento.';
+}
+function coresFormulario() {
+  return Tema.validar(Object.fromEntries(Tema.campos.map(campo=>[campo,$('form-personalizacao').elements[campo].value])));
+}
+function preverCores() {
+  const cores=Tema.aplicar(coresFormulario());
+  for(const campo of Tema.campos)$(campo+'-valor').textContent=cores[campo].toUpperCase();
+  $('status-personalizacao').textContent='Prévia das cores. Clique em Salvar cores para aplicar aos seus clientes.';
+}
+$('form-personalizacao').oninput=preverCores;
+$('descartar-cores').onclick=carregarPersonalizacao;
+$('restaurar-cores').onclick=()=>{
+  for(const campo of Tema.campos)$('form-personalizacao').elements[campo].value=Tema.padrao[campo];
+  preverCores();
+};
+submitSeguro('form-personalizacao',async()=>{
+  if(demo){aviso('Demonstração: as cores mudam apenas nesta visualização. Entre na sua conta para salvar.');return;}
+  if(!lojaAtual)throw new Error('Entre na sua conta para salvar as cores.');
+  const cores=coresFormulario(), campos=$('campos-cores');
+  campos.disabled=true;
+  try{
+    const rows=await api('/rest/v1/saas_barbearias?id=eq.'+lojaAtual.id,'PATCH',cores);
+    if(!rows?.length)throw new Error('As cores não foram salvas. Confira sua conexão e tente novamente.');
+    Object.assign(lojaAtual,rows[0]);
+    carregarPersonalizacao();
+    aviso('Cores salvas. Seu painel e seu link de agendamento usam esta personalização.');
+  }finally{campos.disabled=false;}
+});
+const demonstracaoOriginal=$('demonstracao').onclick;
+$('demonstracao').onclick=async()=>{
+  await demonstracaoOriginal();
+  if(!$('painel').hidden)carregarPersonalizacao();
+};

@@ -39,9 +39,10 @@ window.SaaS = {
   async buscarLoja() {
     const slug = new URLSearchParams(location.search).get('barbearia');
     if (!slug || !/^[a-z0-9-]{3,60}$/.test(slug)) throw new Error('Abra o link de agendamento enviado pela sua barbearia.');
-    const lojas = await this.request('saas_barbearias?select=id,nome,slug,whatsapp,logo&slug=eq.' + encodeURIComponent(slug));
+    const lojas = await this.request('saas_barbearias?select=id,nome,slug,whatsapp,logo,cor_principal,cor_destaque,cor_fundo&slug=eq.' + encodeURIComponent(slug));
     if (!lojas.length) throw new Error('Barbearia não encontrada. Confira o link.');
     this.loja = lojas[0];
+    Tema.aplicar(this.loja);
     document.title = this.loja.nome + ' — Agendamento';
     const titulo = document.querySelector('.cabecalho h1');
     if (titulo) titulo.textContent = this.loja.nome;

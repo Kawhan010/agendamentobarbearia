@@ -20,6 +20,12 @@ As funções públicas de reserva validam a barbearia, serviço, profissional, h
 
 A sessão administrativa fica em memória. Após recarregar a página ou expirar o token, entre novamente. Não há renovação automática nesta versão.
 
+## Personalização das cores
+
+Execute `supabase-personalizacao.sql` após a instalação SaaS. A atualização adiciona três cores à barbearia e mantém as políticas que permitem a edição apenas pelo seu dono. Em **Personalização**, escolha cor principal, destaque e fundo, veja a prévia e salve. O painel e todas as etapas do link público carregam a mesma paleta. O modelo do site continua igual para todas as barbearias.
+
+As cores são salvas no banco, sem depender do navegador do barbeiro. Os tons de texto, superfícies e foco são derivados automaticamente para manter a leitura. Descartar prévia recupera as cores salvas; Restaurar padrão ainda exige Salvar cores. A demonstração não salva alterações.
+
 ## Verificação antes de publicar
 
 O script `testar-saas.cjs` verifica a instalação e as regras de acesso em PostgreSQL local com PGlite. Instale `@electric-sql/pglite@0.3.14` em uma pasta temporária e execute `node testar-saas.cjs CAMINHO_DA_PASTA`, a partir da pasta do projeto. Ele cria duas contas e verifica isolamento de leitura/escrita, privacidade, reservas, conflito de horário e pausa. Essa validação não substitui os testes de autenticação no Supabase publicado.
