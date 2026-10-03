@@ -1,0 +1,41 @@
+.rodape-site {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  width: min(100% - 40px, 1080px);
+  margin: 48px auto 24px;
+  padding: 20px 0;
+  border-top: 1px solid var(--borda-suave, #d8d6d3);
+}
+
+.rodape-site-com-acesso {justify-content: space-between;}
+.rodape-site .voltar {margin: 0;}
+
+.assinatura-wk {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--texto-secundario, #606068);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.marca-wk {
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+  padding: 4px;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.assinatura-wk .marca-wk {width: 64px; height: 64px;}
+.admin-topo > a {flex-shrink: 0;}
+.admin-topo .marca-wk {width: 56px; height: 56px;}
+.cabecalho .logo[src*="wk-agendamento-logo.png"] {background: #ffffff;}
+
+@media (max-width: 480px) {
+  .rodape-site {width: calc(100% - 32px); margin-top: 32px;}
+}
