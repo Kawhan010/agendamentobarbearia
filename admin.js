@@ -113,7 +113,7 @@ async function renderAgenda(){
   else FinanceiroAgenda.estado(data,'Não foi possível carregar o resumo. Clique em Atualizar para tentar novamente.');
   $('lista-agenda').replaceChildren();
   if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':data?'Nenhum agendamento nesta data.':'Nenhum agendamento cadastrado.'));
-  reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao(r.status==='confirmado'?'Abrir confirmação no WhatsApp':'Confirmar',()=>confirmarAgendamento(r,r.status!=='confirmado')),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
+  reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao(r.status==='confirmado'?'Confirmar no WhatsApp':'Confirmar',()=>confirmarAgendamento(r,r.status!=='confirmado')),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
   if(confirmandoAgenda||limpandoAgenda)$('lista-agenda').querySelectorAll('button').forEach(b=>b.disabled=true);
 }
 function janelaConfirmacao(){
@@ -132,9 +132,9 @@ function janelaConfirmacao(){
 }
 async function confirmarAgendamento(reserva,confirmar=true){
   if(confirmandoAgenda||limpandoAgenda)return;
-  if(demo||!token||!lojaAtual)throw new Error('Entre na sua conta para confirmar e avisar o cliente.');
+  if(demo||!token||!lojaAtual)throw new Error('Entre na sua conta para confirmar o agendamento.');
   const loja={...lojaAtual},sessao=token;
-  const janela=janelaConfirmacao();
+  const janela=confirmar?null:janelaConfirmacao();
   confirmandoAgenda=true;atualizarBotaoLimpeza();
   for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=true;
   $('lista-agenda').querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -153,6 +153,11 @@ async function confirmarAgendamento(reserva,confirmar=true){
     if(!salva)throw new Error('O agendamento foi alterado ou não pôde ser confirmado. Atualize a lista.');
     confirmado=true;Object.assign(reserva,salva);
     if(token!==sessao||lojaAtual?.id!==loja.id)throw new Error('Entre novamente para avisar o cliente.');
+    if(confirmar){
+      let mensagem='Agendamento confirmado no site. Use o botão Confirmar no WhatsApp se quiser avisar o cliente.';
+      try{await renderAgenda();}catch{mensagem='Agendamento confirmado no site. Atualize a lista para consultar o agendamento.';}
+      aviso(mensagem);return;
+    }
     const link=ConfirmacaoWhatsApp.link(salva);
     if(janela&&!janela.closed){try{janela.location.replace(link);aberto=true;}catch{}}
     if(!aberto)try{janela?.close();}catch{}
@@ -166,7 +171,7 @@ async function confirmarAgendamento(reserva,confirmar=true){
   }catch(e){
     try{janela?.close();}catch{}
     try{await renderAgenda();}catch{}
-    aviso((confirmado?'Agendamento confirmado, mas a mensagem não foi aberta. ':'')+e.message);
+    aviso((confirmado?(confirmar?'Agendamento confirmado no site. ':'Agendamento confirmado, mas a mensagem não foi aberta. '):'')+e.message);
   }finally{
     confirmandoAgenda=false;atualizarBotaoLimpeza();
     for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=false;

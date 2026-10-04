@@ -22,9 +22,11 @@ A sessão administrativa fica em memória. Após recarregar a página ou expirar
 
 ## Confirmação pelo WhatsApp
 
-Ao clicar em **Confirmar**, o painel salva o agendamento e abre a conversa do cliente com a mensagem **Agendamento confirmado**, sem outras informações. **O barbeiro ainda precisa tocar em Enviar no WhatsApp.** O site não envia nem verifica a entrega da mensagem sozinho; o envio automático exige uma API do WhatsApp Business, ainda não configurada.
+Ao clicar em **Confirmar**, o painel salva o agendamento somente no site e recalcula o resumo do dia. Nenhuma conversa ou mensagem do WhatsApp é aberta nesse clique. Após confirmar, o agendamento mostra o botão **Confirmar no WhatsApp**.
 
-Uma janela de espera é aberta durante o clique para evitar bloqueio de pop-up, mas só recebe o link de confirmação depois que o banco confirma o estado salvo. Se a gravação falhar, a janela é fechada. Caso a resposta da gravação se perca, o painel consulta o agendamento antes de preparar a mensagem. Agendamentos já confirmados mostram **Abrir confirmação no WhatsApp**, sem gravar novamente. Se o navegador bloquear a janela, o aviso oferece o link **Abrir WhatsApp do cliente**. O painel consulta o estado atual antes de preparar a conversa, para não enviar uma confirmação de um atendimento cancelado ou removido em outra aba.
+O barbeiro pode clicar nesse segundo botão quando quiser avisar o cliente. O painel confere que o agendamento continua confirmado e abre a conversa com a mensagem **Agendamento confirmado**, sem outras informações. **O barbeiro ainda precisa tocar em Enviar no WhatsApp.** O site não envia nem verifica a entrega sozinho; o envio automático exige uma API do WhatsApp Business, ainda não configurada.
+
+Somente o clique em **Confirmar no WhatsApp** abre uma janela de espera para evitar bloqueio de pop-up. Se a consulta falhar ou o agendamento tiver sido cancelado ou removido, a janela é fechada. Se o navegador bloquear a janela, o aviso oferece **Abrir WhatsApp do cliente**. Esse segundo botão apenas consulta o estado e prepara a conversa; não grava uma nova confirmação. Se a resposta da confirmação no site se perder, o painel consulta o registro para conferir se foi salvo.
 
 ## Personalização das cores
 
