@@ -36,6 +36,12 @@ Cada envio usa um caminho novo para evitar imagem antiga em cache. Após uma tro
 
 O rodapé das cinco páginas principais identifica **Wendell Kawhan**, com contato **(79) 99677-6478** por WhatsApp.
 
+## Exclusão de profissionais e limpeza da agenda
+
+Execute `supabase-exclusoes.sql` após a instalação SaaS. **Excluir profissional**, em **Barbearia e profissionais**, pede confirmação e retira a pessoa da equipe e da seleção pública. O registro fica arquivado e inativo no banco para preservar seus agendamentos existentes e a integridade do histórico.
+
+Em **Agendamentos**, **Limpar lista** pede confirmação e exclui permanentemente os registros exibidos. Com uma data selecionada, só alcança essa data; com o filtro vazio, alcança todas as datas exibidas. A exclusão libera os horários reservados. Agendamentos recebidos depois da consulta ficam preservados. O botão fica desabilitado enquanto a lista carrega, quando está vazia ou durante a limpeza. A função do banco exige a conta do dono e respeita o isolamento entre barbearias.
+
 ## Verificação antes de publicar
 
 O script `testar-saas.cjs` verifica a instalação e as regras de acesso em PostgreSQL local com PGlite. Instale `@electric-sql/pglite@0.3.14` em uma pasta temporária e execute `node testar-saas.cjs CAMINHO_DA_PASTA`, a partir da pasta do projeto. Ele cria duas contas e verifica isolamento de leitura/escrita, privacidade, reservas, conflito de horário e pausa. Essa validação não substitui os testes de autenticação no Supabase publicado.
@@ -43,6 +49,8 @@ O script `testar-saas.cjs` verifica a instalação e as regras de acesso em Post
 Para testar a inicialização das páginas e o fluxo do painel com API simulada, instale também `jsdom@26.1.0` na mesma pasta temporária e execute `node testar-interface.cjs CAMINHO_DA_PASTA`.
 
 Execute também `node testar-fotos.cjs CAMINHO_DA_PASTA` para verificar fotos, prévia, cancelamento, cadastro, troca, remoção, falhas de envio e os contatos no rodapé. O teste SQL inclui as políticas do Storage com o contrato mínimo local; os formatos e tamanho dos arquivos também são limitados pelo bucket no Supabase.
+
+Execute `node testar-exclusoes.cjs CAMINHO_DA_PASTA` para verificar as confirmações, o filtro por data, cancelamentos, falhas de conexão e a preservação de agendamentos recebidos após a consulta. O teste SQL também verifica a exclusão com histórico, o isolamento da limpeza e a liberação de horários.
 
 Crie duas contas de teste, cada uma com sua barbearia. Confira que cada dono vê somente suas reservas e consegue alterar somente seus registros, inclusive por requisições diretas à API. Confira que reservas no mesmo horário de barbearias diferentes funcionam, que duas reservas concorrentes para o mesmo profissional não ocupam o mesmo horário e que a consulta pública não retorna dados de clientes. Teste os e-mails de confirmação e recuperação no endereço publicado.
 

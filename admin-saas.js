@@ -55,18 +55,40 @@ submitSeguro('form-configuracoes',async f=>{
   await abrirBarbearia();aviso('Dados da barbearia salvos.');
 });
 async function carregarProfissionais(){
-  const pessoas=await api('/rest/v1/saas_profissionais?select=*&barbearia_id=eq.'+lojaAtual.id+'&order=nome');
+  const pessoas=await api('/rest/v1/saas_profissionais?select=*&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id+'&order=nome');
   $('lista-profissionais').replaceChildren();
   for(const p of pessoas){
+    const excluir=acao('Excluir profissional',()=>excluirProfissional(p));excluir.classList.add('perigo');
     const item=linha(p.nome,p.ativo?'Disponível para agendamento':'Inativo',[
       acao('Editar profissional',()=>editarProfissional(p)),
-      acao(p.ativo?'Desativar':'Ativar',async()=>{await api('/rest/v1/saas_profissionais?id=eq.'+encodeURIComponent(p.id)+'&barbearia_id=eq.'+lojaAtual.id,'PATCH',{ativo:!p.ativo});await carregarProfissionais();}),
+      acao(p.ativo?'Desativar':'Ativar',async()=>{if($('campos-profissional').disabled)throw new Error('Aguarde a alteração em andamento.');await api('/rest/v1/saas_profissionais?id=eq.'+encodeURIComponent(p.id)+'&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id,'PATCH',{ativo:!p.ativo});await carregarProfissionais();}),
+      excluir,
     ]);
     const identidade=el('div','','profissional-identidade');
     identidade.append(FotosProfissionais.avatar(p),item.firstElementChild);
     item.prepend(identidade);$('lista-profissionais').append(item);
   }
   if(!pessoas.length)$('lista-profissionais').append(el('p','Cadastre o primeiro profissional da sua equipe.'));
+}
+async function excluirProfissional(p){
+  if(demo||!lojaAtual||!token)throw new Error('Entre na sua conta para excluir profissionais.');
+  const campos=$('campos-profissional');
+  if(campos.disabled)throw new Error('Aguarde a alteração em andamento.');
+  if(!window.confirm('Excluir '+p.nome+' da equipe?\n\nEle deixará de aparecer para novos agendamentos. Os atendimentos já cadastrados serão mantidos.'))return;
+  campos.disabled=true;$('sair').disabled=true;
+  try{
+    let rows;
+    try{rows=await api('/rest/v1/saas_profissionais?id=eq.'+encodeURIComponent(p.id)+'&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id,'PATCH',{excluido:true,ativo:false});}
+    catch(e){
+      // Confirma uma exclusão cuja resposta possa ter se perdido na conexão.
+      try{rows=await api('/rest/v1/saas_profissionais?select=id,excluido&id=eq.'+encodeURIComponent(p.id)+'&barbearia_id=eq.'+lojaAtual.id);}catch{throw e;}
+      if(!rows?.some(item=>item.excluido))throw e;
+    }
+    if(!rows?.length)throw new Error('O profissional não foi excluído. Atualize a lista e tente novamente.');
+    if($('form-profissional').elements.id.value===p.id)limparEditorProfissional();
+    try{await carregarProfissionais();}catch{aviso('Profissional excluído. Atualize o painel para consultar a equipe.');return;}
+    aviso('Profissional excluído da equipe. Seus agendamentos existentes foram mantidos.');
+  }finally{campos.disabled=false;$('sair').disabled=false;}
 }
 let profissionalEditado=null, fotoSelecionada=null, previaFoto='', fotoRemovida=false, versaoFoto=0, validandoFoto=false;
 function liberarPreviaFoto(){if(previaFoto)URL.revokeObjectURL(previaFoto);previaFoto='';}
@@ -135,7 +157,7 @@ submitSeguro('form-profissional',async f=>{
   try{
     if(fotoSelecionada){$('status-foto-profissional').textContent='Enviando a foto…';enviada=await enviarFotoProfissional(fotoSelecionada,loja,sessao);foto=enviada;}
     let rows;
-    try{rows=await api('/rest/v1/saas_profissionais'+(editando?'?id=eq.'+encodeURIComponent(id)+'&barbearia_id=eq.'+loja:''),editando?'PATCH':'POST',editando?{nome,foto}:{id,barbearia_id:loja,nome,foto});}
+    try{rows=await api('/rest/v1/saas_profissionais'+(editando?'?id=eq.'+encodeURIComponent(id)+'&excluido=eq.false&barbearia_id=eq.'+loja:''),editando?'PATCH':'POST',editando?{nome,foto}:{id,barbearia_id:loja,nome,foto});}
     catch(erro){
       // A conexão pode cair depois que o banco salva. Confirma antes de oferecer uma nova tentativa.
       try{rows=await api('/rest/v1/saas_profissionais?select=id,nome,foto&id=eq.'+encodeURIComponent(id)+'&barbearia_id=eq.'+loja);}catch{throw erro;}

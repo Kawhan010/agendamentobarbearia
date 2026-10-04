@@ -3,6 +3,7 @@ const config = window.AGENDA_CONFIG;
 let token = '', demo = false, lojaAtual = null;
 let pausado = false, intervalosProntos = false;
 let servicos = [], expediente = [], bloqueios = [];
+let reservasExibidas=[], dataAgendaExibida=null, versaoAgenda=0, limpandoAgenda=false, erroAgenda=false;
 const aviso = mensagem => { $('aviso').textContent = mensagem; };
 const semana = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 async function api(path, method = 'GET', body) {
@@ -85,15 +86,58 @@ function renderExpediente() {
 }
 function renderBloqueios(){ $('lista-bloqueios').replaceChildren();bloqueios.forEach(b=>$('lista-bloqueios').append(linha(b.data.split('-').reverse().join('/')+' • '+(b.horario||'Dia inteiro'),b.motivo||'Sem motivo informado',[acao('Liberar',async()=>{if(!demo)await api('/rest/v1/bloqueios?id=eq.'+b.id,'DELETE');else bloqueios=bloqueios.filter(x=>x.id!==b.id);await carregar();})])));}
 async function renderAgenda(){
-  const data=$('filtro-data').value;
-  const reservas=demo?[]:await api('/rest/v1/reservas?select=*&order=horario'+(data?'&data=eq.'+data:''));
+  const data=$('filtro-data').value, versao=++versaoAgenda;
+  reservasExibidas=[];dataAgendaExibida=null;erroAgenda=false;atualizarBotaoLimpeza();
+  $('lista-agenda').replaceChildren(el('p','Carregando agendamentos…'));
+  let reservas;
+  try{
+    reservas=demo?[]:await api('/rest/v1/reservas?select=*&order=horario'+(data?'&data=eq.'+data:''));
+    if(!Array.isArray(reservas))throw new Error('Não foi possível carregar os agendamentos.');
+  }catch(e){
+    if(versao!==versaoAgenda)return;
+    erroAgenda=true;atualizarBotaoLimpeza();
+    $('lista-agenda').replaceChildren(el('p','Não foi possível carregar os agendamentos. Clique em Atualizar para tentar novamente.'));
+    throw e;
+  }
+  if(versao!==versaoAgenda)return;
+  reservasExibidas=reservas;dataAgendaExibida=data;atualizarBotaoLimpeza();
   $('lista-agenda').replaceChildren();
-  if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':'Nenhum agendamento nesta data.'));
-  reservas.forEach(r=>$('lista-agenda').append(linha(r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao('Confirmar',async()=>{await salvar('reservas',r.id,{status:'confirmado'});await renderAgenda();}),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
+  if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':data?'Nenhum agendamento nesta data.':'Nenhum agendamento cadastrado.'));
+  reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao('Confirmar',async()=>{await salvar('reservas',r.id,{status:'confirmado'});await renderAgenda();}),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
 }
+function atualizarBotaoLimpeza(){
+  $('limpar-agendamentos').disabled=limpandoAgenda||dataAgendaExibida===null||!reservasExibidas.length;
+  $('escopo-limpeza-agenda').textContent=erroAgenda?'Atualize a lista para carregar os agendamentos antes de limpar.':dataAgendaExibida===null?'Carregando agendamentos…':dataAgendaExibida?'Limpar lista exclui apenas os agendamentos de '+dataAgendaExibida.split('-').reverse().join('/')+'.':'Limpar lista exclui todos os agendamentos da sua barbearia exibidos abaixo.';
+}
+$('limpar-agendamentos').onclick=async()=>{
+  if(limpandoAgenda||dataAgendaExibida===null||!reservasExibidas.length)return;
+  if(demo){aviso('Entre na sua conta para limpar agendamentos.');return;}
+  if(!lojaAtual||!token){aviso('Entre na sua conta para limpar agendamentos.');return;}
+  const ids=[...new Set(reservasExibidas.map(r=>r.id))],loja=lojaAtual.id;
+  const periodo=dataAgendaExibida?'de '+dataAgendaExibida.split('-').reverse().join('/'):'de todas as datas';
+  if(!window.confirm('Excluir permanentemente '+ids.length+' agendamento'+(ids.length===1?'':'s')+' '+periodo+' exibido'+(ids.length===1?'':'s')+' nesta lista?\n\nIsso libera os horários reservados. Esta ação não pode ser desfeita.'))return;
+  limpandoAgenda=true;atualizarBotaoLimpeza();
+  for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=true;
+  const botoes=[...$('lista-agenda').querySelectorAll('button')];botoes.forEach(b=>b.disabled=true);
+  try{
+    const quantidade=await api('/rest/v1/rpc/saas_limpar_agendamentos','POST',{loja,reservas:ids});
+    if(!Number.isInteger(quantidade)||quantidade<0)throw new Error('Não foi possível confirmar a limpeza. Atualize a lista antes de tentar novamente.');
+    const mensagem=quantidade?quantidade+' agendamento'+(quantidade===1?' excluído.':'s excluídos.'):'Nenhum agendamento restante para excluir.';
+    reservasExibidas=[];dataAgendaExibida=null;
+    try{await renderAgenda();aviso(mensagem);}catch{aviso(mensagem+' Atualize o painel para consultar a lista.');}
+  }catch(e){
+    // Uma resposta perdida pode ocorrer após a exclusão. Reconsulta antes de permitir outra tentativa.
+    try{await renderAgenda();}catch{reservasExibidas=[];dataAgendaExibida=null;}
+    aviso(e.message);
+  }finally{
+    limpandoAgenda=false;atualizarBotaoLimpeza();
+    for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=false;
+    botoes.forEach(b=>b.disabled=false);
+  }
+};
 // Login e criação de barbearia são definidos em admin-saas.js.
 $('demonstracao').onclick=async()=>{demo=true;try{servicos=await fetch('catalogo-inicial.json').then(r=>r.json());expediente=semana.map((_,id)=>({id,aberto:id!==1,inicio:'09:00',fim:'18:00'}));bloqueios=[];await carregar();$('login').hidden=true;$('painel').hidden=false;$('sair').hidden=false;aviso('Demonstração: dados de exemplo. Nenhuma alteração é enviada ao Supabase.');}catch{aviso('Abra o site pelo Live Server para carregar a demonstração.');}};
-$('sair').onclick=()=>{token='';demo=false;$('painel').hidden=true;$('login').hidden=false;$('sair').hidden=true;aviso('Você saiu do painel.');};
+$('sair').onclick=()=>{token='';demo=false;++versaoAgenda;reservasExibidas=[];dataAgendaExibida=null;atualizarBotaoLimpeza();$('lista-agenda').replaceChildren();$('painel').hidden=true;$('login').hidden=false;$('sair').hidden=true;aviso('Você saiu do painel.');};
 for(const b of document.querySelectorAll('[data-area]')) b.onclick=()=>{document.querySelectorAll('.area').forEach(a=>a.hidden=a.id!==b.dataset.area);document.querySelectorAll('[data-area]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));};
 $('form-servico').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const imagem=f.imagem.value.trim();if(imagem&&!/^(assets\/[^\s]+|https:\/\/)/.test(imagem))throw new Error('Use um caminho assets/ ou uma URL HTTPS.');const dados={nome:f.nome.value.trim(),descricao:f.descricao.value.trim(),preco:Number(f.preco.value),categoria:f.categoria.value,imagem,ativo:true};if(!dados.nome)throw new Error('Informe o nome.');await salvar('servicos',f.elements.id.value,dados);if(demo){const old=servicos.find(s=>s.id===f.elements.id.value);if(old)Object.assign(old,dados);else servicos.push({...dados,id:crypto.randomUUID()});}f.reset();$('titulo-editor').textContent='Adicionar serviço';await carregar();}catch(err){aviso(err.message);}finally{b.disabled=false;}};
 $('limpar-servico').onclick=()=>{$('form-servico').reset();$('form-servico').elements.id.value='';$('titulo-editor').textContent='Adicionar serviço';};

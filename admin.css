@@ -2,4 +2,7 @@
 
 @media(min-width:701px){.dia-expediente{grid-template-columns:1.2fr repeat(4,1fr)}}
 #alternar-pausa{border-color:var(--vermelho);color:var(--vermelho)}
+.admin-main button.perigo{border-color:var(--vermelho);color:var(--destaque-legivel,var(--vermelho))}
+.admin-main button.perigo:hover{background:var(--superficie-suave,#eae8e5)}
+#escopo-limpeza-agenda{font-size:.85rem}
 
