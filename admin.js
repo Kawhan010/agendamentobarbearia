@@ -89,18 +89,28 @@ async function renderAgenda(){
   const data=$('filtro-data').value, versao=++versaoAgenda;
   reservasExibidas=[];dataAgendaExibida=null;erroAgenda=false;atualizarBotaoLimpeza();
   $('lista-agenda').replaceChildren(el('p','Carregando agendamentos…'));
+  FinanceiroAgenda.estado(data,'Calculando os totais…');
   let reservas;
+  let financeiro;
   try{
-    reservas=demo?[]:await api('/rest/v1/reservas?select=*&order=horario'+(data?'&data=eq.'+data:''));
+    const resultados=await Promise.allSettled([
+      demo?Promise.resolve([]):api('/rest/v1/reservas?select=*&order=horario'+(data?'&data=eq.'+data:'')),
+      demo?Promise.resolve(FinanceiroAgenda.vazio):api('/rest/v1/rpc/saas_resumo_financeiro','POST',{loja:lojaAtual.id,dia:data||null}),
+    ]);
+    if(resultados[0].status==='rejected')throw resultados[0].reason;
+    reservas=resultados[0].value;financeiro=resultados[1];
     if(!Array.isArray(reservas))throw new Error('Não foi possível carregar os agendamentos.');
   }catch(e){
     if(versao!==versaoAgenda)return;
     erroAgenda=true;atualizarBotaoLimpeza();
     $('lista-agenda').replaceChildren(el('p','Não foi possível carregar os agendamentos. Clique em Atualizar para tentar novamente.'));
+    FinanceiroAgenda.estado(data,'Não foi possível carregar o resumo. Clique em Atualizar para tentar novamente.');
     throw e;
   }
   if(versao!==versaoAgenda)return;
   reservasExibidas=reservas;dataAgendaExibida=data;atualizarBotaoLimpeza();
+  if(financeiro.status==='fulfilled')FinanceiroAgenda.renderizar(financeiro.value,data);
+  else FinanceiroAgenda.estado(data,'Não foi possível carregar o resumo. Clique em Atualizar para tentar novamente.');
   $('lista-agenda').replaceChildren();
   if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':data?'Nenhum agendamento nesta data.':'Nenhum agendamento cadastrado.'));
   reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao(r.status==='confirmado'?'Abrir confirmação no WhatsApp':'Confirmar',()=>confirmarAgendamento(r,r.status!=='confirmado')),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
@@ -173,7 +183,7 @@ $('limpar-agendamentos').onclick=async()=>{
   if(!lojaAtual||!token){aviso('Entre na sua conta para limpar agendamentos.');return;}
   const ids=[...new Set(reservasExibidas.map(r=>r.id))],loja=lojaAtual.id;
   const periodo=dataAgendaExibida?'de '+dataAgendaExibida.split('-').reverse().join('/'):'de todas as datas';
-  if(!window.confirm('Excluir permanentemente '+ids.length+' agendamento'+(ids.length===1?'':'s')+' '+periodo+' exibido'+(ids.length===1?'':'s')+' nesta lista?\n\nIsso libera os horários reservados. Esta ação não pode ser desfeita.'))return;
+  if(!window.confirm('Excluir permanentemente '+ids.length+' agendamento'+(ids.length===1?'':'s')+' '+periodo+' exibido'+(ids.length===1?'':'s')+' nesta lista?\n\nIsso libera os horários reservados e remove os valores desses registros do resumo. Esta ação não pode ser desfeita.'))return;
   limpandoAgenda=true;atualizarBotaoLimpeza();
   for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=true;
   const botoes=[...$('lista-agenda').querySelectorAll('button')];botoes.forEach(b=>b.disabled=true);
@@ -195,7 +205,7 @@ $('limpar-agendamentos').onclick=async()=>{
 };
 // Login e criação de barbearia são definidos em admin-saas.js.
 $('demonstracao').onclick=async()=>{demo=true;try{servicos=await fetch('catalogo-inicial.json').then(r=>r.json());expediente=semana.map((_,id)=>({id,aberto:id!==1,inicio:'09:00',fim:'18:00'}));bloqueios=[];await carregar();$('login').hidden=true;$('painel').hidden=false;$('sair').hidden=false;aviso('Demonstração: dados de exemplo. Nenhuma alteração é enviada ao Supabase.');}catch{aviso('Abra o site pelo Live Server para carregar a demonstração.');}};
-$('sair').onclick=()=>{token='';demo=false;++versaoAgenda;reservasExibidas=[];dataAgendaExibida=null;atualizarBotaoLimpeza();$('lista-agenda').replaceChildren();$('painel').hidden=true;$('login').hidden=false;$('sair').hidden=true;aviso('Você saiu do painel.');};
+$('sair').onclick=()=>{token='';demo=false;++versaoAgenda;reservasExibidas=[];dataAgendaExibida=null;atualizarBotaoLimpeza();$('lista-agenda').replaceChildren();FinanceiroAgenda.limpar();$('painel').hidden=true;$('login').hidden=false;$('sair').hidden=true;aviso('Você saiu do painel.');};
 for(const b of document.querySelectorAll('[data-area]')) b.onclick=()=>{document.querySelectorAll('.area').forEach(a=>a.hidden=a.id!==b.dataset.area);document.querySelectorAll('[data-area]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));};
 $('form-servico').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const imagem=f.imagem.value.trim();if(imagem&&!/^(assets\/[^\s]+|https:\/\/)/.test(imagem))throw new Error('Use um caminho assets/ ou uma URL HTTPS.');const dados={nome:f.nome.value.trim(),descricao:f.descricao.value.trim(),preco:Number(f.preco.value),categoria:f.categoria.value,imagem,ativo:true};if(!dados.nome)throw new Error('Informe o nome.');await salvar('servicos',f.elements.id.value,dados);if(demo){const old=servicos.find(s=>s.id===f.elements.id.value);if(old)Object.assign(old,dados);else servicos.push({...dados,id:crypto.randomUUID()});}f.reset();$('titulo-editor').textContent='Adicionar serviço';await carregar();}catch(err){aviso(err.message);}finally{b.disabled=false;}};
 $('limpar-servico').onclick=()=>{$('form-servico').reset();$('form-servico').elements.id.value='';$('titulo-editor').textContent='Adicionar serviço';};

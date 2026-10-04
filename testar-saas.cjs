@@ -24,6 +24,7 @@ const assert=require('node:assert/strict');
  await db.exec(fs.readFileSync('supabase-exclusoes.sql','utf8'));
  await db.exec(fs.readFileSync('supabase-duracao-profissionais.sql','utf8'));
  await db.exec(fs.readFileSync('supabase-duracao-profissionais.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase-resumo-financeiro.sql','utf8'));
  const a='10000000-0000-4000-8000-000000000001', b='10000000-0000-4000-8000-000000000002';
  await db.query('insert into auth.users values($1),($2)',[a,b]);
  async function conta(user){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);await db.exec('set role authenticated');}

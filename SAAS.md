@@ -56,6 +56,14 @@ A agenda calcula a grade, o término antes do fechamento, os intervalos e os con
 
 Execute `node testar-duracoes.cjs CAMINHO_DA_PASTA` e `node testar-duracoes-interface.cjs CAMINHO_DA_PASTA` para verificar a migração, grades com diferentes durações, preservação das reservas, conflitos, fechamento, intervalos, bloqueios, isolamento entre lojas e edição dos tempos no painel. Os testes usam PGlite e jsdom em dados isolados.
 
+## Valores da agenda por dia e barbeiro
+
+Execute `supabase-resumo-financeiro.sql` após a instalação SaaS. Na aba **Agendamentos**, o filtro **Dia** também seleciona o resumo: mostra a soma dos preços salvos nos agendamentos confirmados e, separadamente, os valores previstos dos pendentes. Cancelados não entram nas somas. A tabela mostra os totais de cada barbeiro, inclusive profissionais inativos ou excluídos que tenham registros no período. Com o filtro vazio, o resumo abrange todas as datas.
+
+Confirmar, cancelar, atualizar a lista ou mudar a data recalcula o resumo. Alterações posteriores no preço do catálogo não alteram os valores já registrados. Os totais representam valores de agendamentos por status; o sistema não registra pagamentos recebidos. A limpeza permanente dos agendamentos também retira seus valores do resumo.
+
+A função do banco soma todos os registros do período e retorna um único objeto, sem o limite de linhas da lista. Somente o dono pode consultar o resumo de sua barbearia; a função usa as políticas de acesso existentes e não expõe dados de clientes. Falhas de consulta mostram um aviso, em vez de um total zerado. Execute `node testar-financeiro.cjs CAMINHO_DA_PASTA` e `node testar-financeiro-interface.cjs CAMINHO_DA_PASTA` com as dependências temporárias já usadas nos demais testes.
+
 ## Verificação antes de publicar
 
 O script `testar-saas.cjs` verifica a instalação e as regras de acesso em PostgreSQL local com PGlite. Instale `@electric-sql/pglite@0.3.14` em uma pasta temporária e execute `node testar-saas.cjs CAMINHO_DA_PASTA`, a partir da pasta do projeto. Ele cria duas contas e verifica isolamento de leitura/escrita, privacidade, reservas, conflito de horário e pausa. Essa validação não substitui os testes de autenticação no Supabase publicado.

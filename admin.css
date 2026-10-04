@@ -10,4 +10,13 @@
 .duracao-profissional:last-child{border-bottom:0}
 .duracao-profissional .profissional-identidade{min-width:0}
 @media(max-width:700px){.admin-main .duracao-profissional{grid-template-columns:1fr}.duracao-profissional button{width:100%}}
+.totais-agenda{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.total-agenda{display:grid;gap:8px;padding:20px;border:1px solid var(--borda-suave,#ddd);border-radius:6px;background:var(--superficie-suave,#eae8e5)}
+.total-agenda>strong{font-size:clamp(1.5rem,4vw,2rem);overflow-wrap:anywhere}
+.total-agenda>small,.tabela-totais small{color:var(--texto-secundario,#606068)}
+.tabela-totais{overflow-x:auto}.tabela-totais table{width:100%;border-collapse:collapse;text-align:left}
+.tabela-totais caption{text-align:left;font-weight:600;padding:12px 0}
+.tabela-totais th,.tabela-totais td{padding:14px 12px;border-bottom:1px solid var(--borda-suave,#ddd);vertical-align:top}
+.tabela-totais td{white-space:nowrap}.tabela-totais td small{display:block;margin-top:6px}
+@media(max-width:500px){.totais-agenda{grid-template-columns:1fr}.tabela-totais th,.tabela-totais td{padding:12px 8px}}
 
