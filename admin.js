@@ -142,11 +142,8 @@ async function confirmarAgendamento(reserva,confirmar=true){
     const salva=rows?.find(r=>r.id===reserva.id&&r.status==='confirmado'&&r.barbearia_id===loja.id);
     if(!salva)throw new Error('O agendamento foi alterado ou não pôde ser confirmado. Atualize a lista.');
     confirmado=true;Object.assign(reserva,salva);
-    // Inclui o nome mesmo quando o profissional foi retirado da equipe.
-    let profissional='';
-    try{const pessoas=await api('/rest/v1/saas_profissionais?select=nome&id=eq.'+encodeURIComponent(salva.profissional)+'&barbearia_id=eq.'+loja.id);profissional=pessoas[0]?.nome||'';}catch{}
     if(token!==sessao||lojaAtual?.id!==loja.id)throw new Error('Entre novamente para avisar o cliente.');
-    const link=ConfirmacaoWhatsApp.link(salva,loja,profissional);
+    const link=ConfirmacaoWhatsApp.link(salva);
     if(janela&&!janela.closed){try{janela.location.replace(link);aberto=true;}catch{}}
     if(!aberto)try{janela?.close();}catch{}
     let mensagem=aberto?'Agendamento confirmado. No WhatsApp, toque em Enviar para avisar o cliente.':'Agendamento confirmado. Abra o WhatsApp do cliente pelo link abaixo e toque em Enviar.';

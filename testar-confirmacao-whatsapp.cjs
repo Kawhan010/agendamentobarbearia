@@ -75,7 +75,7 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   assert.equal(t.reserva.status,'confirmado');assert.equal(t.janelas[0].destinos.length,1);
   const url=new URL(t.janelas[0].destinos[0]),mensagem=url.searchParams.get('text');
   assert.equal(url.origin,'https://api.whatsapp.com');assert.equal(url.searchParams.get('phone'),'5579996776478');
-  for(const detalhe of ['José & Silva','Barbearia São João','04/10/2026','09:20','Corte + barba','45,50','André Salles','✅','responda a esta mensagem'])assert.ok(mensagem.includes(detalhe),detalhe);
+  assert.equal(mensagem,'Agendamento confirmado');
   const patch=patches(t)[0];assert.ok(patch.url.includes('status=eq.pendente'));assert.ok(patch.url.includes('barbearia_id=eq.'+loja.id));
   assert.equal(patch.options.headers.Authorization,'Bearer token-teste');
   assert.equal(botao(t,'Confirmar'),undefined);assert.ok(botao(t,'Abrir confirmação no WhatsApp'));
@@ -106,5 +106,5 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   t=await abrir({reserva:{status:'confirmado'},falharConsultaAposSalvar:false});
   t.opcoes.falharConsultaAposSalvar=true;await botao(t,'Abrir confirmação no WhatsApp').onclick();
   assert.equal(t.janelas[0].destinos.length,0);assert.equal(t.janelas[0].closed,true);assert.equal(patches(t).length,0);t.dom.window.close();
-  console.log('OK: telefone com DDD/país, mensagem e profissional arquivado, confirmação antes da conversa, pop-up bloqueado, falhas, resposta perdida, cancelamento concorrente, outra loja e reabertura sem nova gravação.');
+  console.log('OK: telefone com DDD/país, mensagem curta, confirmação antes da conversa, pop-up bloqueado, falhas, resposta perdida, cancelamento concorrente, outra loja e reabertura sem nova gravação.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

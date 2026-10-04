@@ -22,7 +22,7 @@ A sessão administrativa fica em memória. Após recarregar a página ou expirar
 
 ## Confirmação pelo WhatsApp
 
-Ao clicar em **Confirmar**, o painel salva o agendamento e abre a conversa do cliente com uma mensagem pronta contendo nome da barbearia, cliente, data, horário, serviço, valor e profissional. **O barbeiro ainda precisa tocar em Enviar no WhatsApp.** O site não envia nem verifica a entrega da mensagem sozinho; o envio automático exige uma API do WhatsApp Business, ainda não configurada.
+Ao clicar em **Confirmar**, o painel salva o agendamento e abre a conversa do cliente com a mensagem **Agendamento confirmado**, sem outras informações. **O barbeiro ainda precisa tocar em Enviar no WhatsApp.** O site não envia nem verifica a entrega da mensagem sozinho; o envio automático exige uma API do WhatsApp Business, ainda não configurada.
 
 Uma janela de espera é aberta durante o clique para evitar bloqueio de pop-up, mas só recebe o link de confirmação depois que o banco confirma o estado salvo. Se a gravação falhar, a janela é fechada. Caso a resposta da gravação se perca, o painel consulta o agendamento antes de preparar a mensagem. Agendamentos já confirmados mostram **Abrir confirmação no WhatsApp**, sem gravar novamente. Se o navegador bloquear a janela, o aviso oferece o link **Abrir WhatsApp do cliente**. O painel consulta o estado atual antes de preparar a conversa, para não enviar uma confirmação de um atendimento cancelado ou removido em outra aba.
 
