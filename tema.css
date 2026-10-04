@@ -44,9 +44,11 @@ a {color: var(--link-tema);}
 .admin-main .primario:hover {background: var(--vermelho); color: var(--texto-destaque); border-color: var(--vermelho);}
 .admin-nav button[aria-pressed="true"]:hover {background: var(--azul); color: var(--texto-principal);}
 .botao-continuar:hover:not(:disabled) {background: var(--vermelho); color: var(--texto-destaque); border-color: var(--vermelho); border-bottom-color: var(--azul);}
-.horario.dia > span {background: var(--superficie); color: var(--texto);}
-.horario.dia input:checked + span {background: var(--azul); color: var(--texto-principal);}
-.botao-continuar:disabled, .horario.dia input:disabled + span {background: var(--superficie-suave); color: var(--texto-secundario); border-color: var(--borda-suave);}
+.horario.dia > span {background: linear-gradient(#0000008c, #0000008c), url('assets/calendario.png') center / cover no-repeat; color: #ffffff;}
+.horario.dia small {color: inherit;}
+.horario.dia input:checked + span {background: linear-gradient(#00000099, #00000099), url('assets/calendario.png') center / cover no-repeat; color: #ffffff; border-color: var(--azul);}
+.botao-continuar:disabled {background: var(--superficie-suave); color: var(--texto-secundario); border-color: var(--borda-suave);}
+.horario.dia input:disabled + span {background: linear-gradient(#000000a6, #000000a6), url('assets/calendario.png') center / cover no-repeat; color: #e6e6e6; border-color: var(--borda-suave);}
 .cancelamento summary, .botao-cancelar, #alternar-pausa {color: var(--destaque-legivel); border-color: var(--vermelho);}
 .botao-cancelar:hover {background: var(--superficie-suave);}
 .dia-expediente {border-color: var(--borda-suave);}
