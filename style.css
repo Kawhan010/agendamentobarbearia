@@ -106,7 +106,33 @@ body {
   border: 1px solid var(--azul);
   border-radius: 6px;
   background: #faf8f6;
-  box-shadow: 0 16px 40px #00000018;
+  box-shadow:
+    0 0 10px #ffffff80,
+    0 0 22px #26287825,
+    0 16px 40px #00000018;
+  animation: luz-logo 3s ease-in-out infinite;
+}
+
+@keyframes luz-logo {
+  0%, 100% {
+    box-shadow:
+      0 0 10px #ffffff80,
+      0 0 22px #26287825,
+      0 16px 40px #00000018;
+  }
+
+  50% {
+    box-shadow:
+      0 0 18px 5px #ffffffd9,
+      0 0 42px 12px #26287845,
+      0 16px 40px #00000018;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo {
+    animation: none;
+  }
 }
 
 h1 {
