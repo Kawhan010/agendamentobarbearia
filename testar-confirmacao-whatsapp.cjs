@@ -66,6 +66,9 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   assert.equal(api.telefone('79 3211-2345'),'557932112345');
   assert.throws(()=>api.telefone('123'),/telefone/);
   assert.throws(()=>api.link(t.reserva,loja),/confirmado/);
+  assert.throws(()=>api.link({...t.reserva,status:'confirmado',cliente:'  '}),/nome/);
+  const comEspacos=new URL(api.link({...t.reserva,status:'confirmado',cliente:'  João   da Silva\n'}));
+  assert.equal(comEspacos.searchParams.get('text'),'Olá, João da Silva. Recebi seu agendamento e aguardo você no horário agendado.');
   assert.equal(botao(t,'Confirmar no WhatsApp'),undefined);
   const confirmacao=botao(t,'Confirmar').onclick();
   assert.equal(t.janelas.length,0);assert.equal(t.aberturas,0);
@@ -81,14 +84,16 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   assert.equal(t.janelas.length,1);assert.equal(t.janelas[0].opener,null);assert.equal(t.janelas[0].destinos.length,1);
   const url=new URL(t.janelas[0].destinos[0]),mensagem=url.searchParams.get('text');
   assert.equal(url.origin,'https://api.whatsapp.com');assert.equal(url.searchParams.get('phone'),'5579996776478');
-  assert.equal(mensagem,'Agendamento confirmado');
+  assert.equal(mensagem,'Olá, José & Silva. Recebi seu agendamento e aguardo você no horário agendado.');
   const patch=patches(t)[0];assert.ok(patch.url.includes('status=eq.pendente'));assert.ok(patch.url.includes('barbearia_id=eq.'+loja.id));
   assert.equal(patch.options.headers.Authorization,'Bearer token-teste');
   assert.equal(botao(t,'Confirmar'),undefined);assert.ok(botao(t,'Confirmar no WhatsApp'));
   assert.ok(t.d.getElementById('aviso').textContent.includes('toque em Enviar'));
   assert.ok(!t.d.getElementById('aviso').textContent.includes('mensagem enviada'));
+  t.reserva.cliente='Marina de Souza';
   await botao(t,'Confirmar no WhatsApp').onclick();
   assert.equal(patches(t).length,1);assert.equal(t.janelas[1].destinos.length,1);
+  assert.equal(new URL(t.janelas[1].destinos[0]).searchParams.get('text'),'Olá, Marina de Souza. Recebi seu agendamento e aguardo você no horário agendado.');
   // Outro painel cancelou o atendimento: não prepara nova confirmação.
   t.reserva.status='cancelado';await botao(t,'Confirmar no WhatsApp').onclick();
   assert.equal(t.janelas[2].destinos.length,0);assert.equal(t.janelas[2].closed,true);
@@ -117,5 +122,5 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   assert.equal(t.aberturas,0);assert.equal(botao(t,'Confirmar'),undefined);
   t.opcoes.falharConsultaAposSalvar=true;await botao(t,'Confirmar no WhatsApp').onclick();
   assert.equal(t.janelas[0].destinos.length,0);assert.equal(t.janelas[0].closed,true);assert.equal(patches(t).length,0);t.dom.window.close();
-  console.log('OK: confirmação apenas no site sem pop-up, botão de WhatsApp só após confirmar, abertura manual, mensagem curta, falhas, resposta perdida, telefone inválido, cancelamento concorrente e consulta sem nova gravação.');
+  console.log('OK: mensagem formal com o nome atual do cliente, acentos, nome vazio, espaços, confirmação só no site, abertura manual, falhas, resposta perdida e cancelamento concorrente.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
