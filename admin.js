@@ -3,7 +3,7 @@ const config = window.AGENDA_CONFIG;
 let token = '', demo = false, lojaAtual = null;
 let pausado = false, intervalosProntos = false;
 let servicos = [], expediente = [], bloqueios = [];
-let reservasExibidas=[], dataAgendaExibida=null, versaoAgenda=0, limpandoAgenda=false, erroAgenda=false;
+let reservasExibidas=[], dataAgendaExibida=null, versaoAgenda=0, limpandoAgenda=false, confirmandoAgenda=false, erroAgenda=false;
 const aviso = mensagem => { $('aviso').textContent = mensagem; };
 const semana = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 async function api(path, method = 'GET', body) {
@@ -103,14 +103,75 @@ async function renderAgenda(){
   reservasExibidas=reservas;dataAgendaExibida=data;atualizarBotaoLimpeza();
   $('lista-agenda').replaceChildren();
   if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':data?'Nenhum agendamento nesta data.':'Nenhum agendamento cadastrado.'));
-  reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao('Confirmar',async()=>{await salvar('reservas',r.id,{status:'confirmado'});await renderAgenda();}),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
+  reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao(r.status==='confirmado'?'Abrir confirmação no WhatsApp':'Confirmar',()=>confirmarAgendamento(r,r.status!=='confirmado')),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
+  if(confirmandoAgenda||limpandoAgenda)$('lista-agenda').querySelectorAll('button').forEach(b=>b.disabled=true);
+}
+function janelaConfirmacao(){
+  let janela=null;
+  try{
+    // Abre durante o clique, antes da chamada ao banco, para evitar bloqueio de pop-up.
+    janela=window.open('about:blank','_blank');
+    if(!janela)return null;
+    janela.opener=null;
+    janela.document.title='Preparando confirmação';
+    const mensagem=janela.document.createElement('p');
+    mensagem.textContent='Aguarde. O WhatsApp será aberto após verificar a confirmação do agendamento.';
+    janela.document.body.append(mensagem);
+    return janela;
+  }catch{try{janela?.close();}catch{}return null;}
+}
+async function confirmarAgendamento(reserva,confirmar=true){
+  if(confirmandoAgenda||limpandoAgenda)return;
+  if(demo||!token||!lojaAtual)throw new Error('Entre na sua conta para confirmar e avisar o cliente.');
+  const loja={...lojaAtual},sessao=token;
+  const janela=janelaConfirmacao();
+  confirmandoAgenda=true;atualizarBotaoLimpeza();
+  for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=true;
+  $('lista-agenda').querySelectorAll('button').forEach(b=>b.disabled=true);
+  let confirmado=false,aberto=false;
+  try{
+    let rows;
+    if(confirmar){
+      try{rows=await api('/rest/v1/reservas?id=eq.'+encodeURIComponent(reserva.id)+'&status=eq.pendente','PATCH',{status:'confirmado'});}
+      catch(e){
+        // A resposta pode se perder após salvar. Verifica o estado antes de abrir a mensagem.
+        try{rows=await api('/rest/v1/reservas?select=*&id=eq.'+encodeURIComponent(reserva.id));}catch{throw e;}
+        if(!rows?.some(r=>r.status==='confirmado'))throw e;
+      }
+    }else rows=await api('/rest/v1/reservas?select=*&id=eq.'+encodeURIComponent(reserva.id));
+    const salva=rows?.find(r=>r.id===reserva.id&&r.status==='confirmado'&&r.barbearia_id===loja.id);
+    if(!salva)throw new Error('O agendamento foi alterado ou não pôde ser confirmado. Atualize a lista.');
+    confirmado=true;Object.assign(reserva,salva);
+    // Inclui o nome mesmo quando o profissional foi retirado da equipe.
+    let profissional='';
+    try{const pessoas=await api('/rest/v1/saas_profissionais?select=nome&id=eq.'+encodeURIComponent(salva.profissional)+'&barbearia_id=eq.'+loja.id);profissional=pessoas[0]?.nome||'';}catch{}
+    if(token!==sessao||lojaAtual?.id!==loja.id)throw new Error('Entre novamente para avisar o cliente.');
+    const link=ConfirmacaoWhatsApp.link(salva,loja,profissional);
+    if(janela&&!janela.closed){try{janela.location.replace(link);aberto=true;}catch{}}
+    if(!aberto)try{janela?.close();}catch{}
+    let mensagem=aberto?'Agendamento confirmado. No WhatsApp, toque em Enviar para avisar o cliente.':'Agendamento confirmado. Abra o WhatsApp do cliente pelo link abaixo e toque em Enviar.';
+    try{await renderAgenda();}catch{mensagem+=' Atualize a lista para consultar o agendamento.';}
+    aviso(mensagem);
+    if(!aberto){
+      const abrir=el('a','Abrir WhatsApp do cliente');abrir.href=link;abrir.target='_blank';abrir.rel='noopener noreferrer';
+      $('aviso').append(document.createElement('br'),abrir);
+    }
+  }catch(e){
+    try{janela?.close();}catch{}
+    try{await renderAgenda();}catch{}
+    aviso((confirmado?'Agendamento confirmado, mas a mensagem não foi aberta. ':'')+e.message);
+  }finally{
+    confirmandoAgenda=false;atualizarBotaoLimpeza();
+    for(const id of ['filtro-data','atualizar','sair'])$(id).disabled=false;
+    $('lista-agenda').querySelectorAll('button').forEach(b=>b.disabled=false);
+  }
 }
 function atualizarBotaoLimpeza(){
-  $('limpar-agendamentos').disabled=limpandoAgenda||dataAgendaExibida===null||!reservasExibidas.length;
+  $('limpar-agendamentos').disabled=limpandoAgenda||confirmandoAgenda||dataAgendaExibida===null||!reservasExibidas.length;
   $('escopo-limpeza-agenda').textContent=erroAgenda?'Atualize a lista para carregar os agendamentos antes de limpar.':dataAgendaExibida===null?'Carregando agendamentos…':dataAgendaExibida?'Limpar lista exclui apenas os agendamentos de '+dataAgendaExibida.split('-').reverse().join('/')+'.':'Limpar lista exclui todos os agendamentos da sua barbearia exibidos abaixo.';
 }
 $('limpar-agendamentos').onclick=async()=>{
-  if(limpandoAgenda||dataAgendaExibida===null||!reservasExibidas.length)return;
+  if(limpandoAgenda||confirmandoAgenda||dataAgendaExibida===null||!reservasExibidas.length)return;
   if(demo){aviso('Entre na sua conta para limpar agendamentos.');return;}
   if(!lojaAtual||!token){aviso('Entre na sua conta para limpar agendamentos.');return;}
   const ids=[...new Set(reservasExibidas.map(r=>r.id))],loja=lojaAtual.id;
