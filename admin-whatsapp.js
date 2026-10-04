@@ -10,7 +10,7 @@
     if(reserva.status!=='confirmado')throw new Error('O agendamento precisa estar confirmado antes de avisar o cliente.');
     const nome=typeof reserva.cliente==='string'?reserva.cliente.replace(/\s+/g,' ').trim():'';
     if(!nome)throw new Error('Confira o nome do cliente antes de abrir o WhatsApp.');
-    const mensagem='Olá, '+nome+'. Recebi seu agendamento e aguardo você no horário agendado.';
+    const mensagem='Olá, '+nome+'. Recebi seu agendamento e aguardo você no horário agendado. Obrigado pela preferência.';
     return 'https://api.whatsapp.com/send?phone='+telefone(reserva.telefone)+'&text='+encodeURIComponent(mensagem);
   }
   window.ConfirmacaoWhatsApp=Object.freeze({telefone,link});

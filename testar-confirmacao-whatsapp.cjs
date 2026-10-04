@@ -68,7 +68,7 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   assert.throws(()=>api.link(t.reserva,loja),/confirmado/);
   assert.throws(()=>api.link({...t.reserva,status:'confirmado',cliente:'  '}),/nome/);
   const comEspacos=new URL(api.link({...t.reserva,status:'confirmado',cliente:'  João   da Silva\n'}));
-  assert.equal(comEspacos.searchParams.get('text'),'Olá, João da Silva. Recebi seu agendamento e aguardo você no horário agendado.');
+  assert.equal(comEspacos.searchParams.get('text'),'Olá, João da Silva. Recebi seu agendamento e aguardo você no horário agendado. Obrigado pela preferência.');
   assert.equal(botao(t,'Confirmar no WhatsApp'),undefined);
   const confirmacao=botao(t,'Confirmar').onclick();
   assert.equal(t.janelas.length,0);assert.equal(t.aberturas,0);
@@ -84,7 +84,7 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   assert.equal(t.janelas.length,1);assert.equal(t.janelas[0].opener,null);assert.equal(t.janelas[0].destinos.length,1);
   const url=new URL(t.janelas[0].destinos[0]),mensagem=url.searchParams.get('text');
   assert.equal(url.origin,'https://api.whatsapp.com');assert.equal(url.searchParams.get('phone'),'5579996776478');
-  assert.equal(mensagem,'Olá, José & Silva. Recebi seu agendamento e aguardo você no horário agendado.');
+  assert.equal(mensagem,'Olá, José & Silva. Recebi seu agendamento e aguardo você no horário agendado. Obrigado pela preferência.');
   const patch=patches(t)[0];assert.ok(patch.url.includes('status=eq.pendente'));assert.ok(patch.url.includes('barbearia_id=eq.'+loja.id));
   assert.equal(patch.options.headers.Authorization,'Bearer token-teste');
   assert.equal(botao(t,'Confirmar'),undefined);assert.ok(botao(t,'Confirmar no WhatsApp'));
@@ -93,7 +93,7 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   t.reserva.cliente='Marina de Souza';
   await botao(t,'Confirmar no WhatsApp').onclick();
   assert.equal(patches(t).length,1);assert.equal(t.janelas[1].destinos.length,1);
-  assert.equal(new URL(t.janelas[1].destinos[0]).searchParams.get('text'),'Olá, Marina de Souza. Recebi seu agendamento e aguardo você no horário agendado.');
+  assert.equal(new URL(t.janelas[1].destinos[0]).searchParams.get('text'),'Olá, Marina de Souza. Recebi seu agendamento e aguardo você no horário agendado. Obrigado pela preferência.');
   // Outro painel cancelou o atendimento: não prepara nova confirmação.
   t.reserva.status='cancelado';await botao(t,'Confirmar no WhatsApp').onclick();
   assert.equal(t.janelas[2].destinos.length,0);assert.equal(t.janelas[2].closed,true);
