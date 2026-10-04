@@ -9,11 +9,14 @@
   <link rel="stylesheet" href="admin.css">
   <link rel="stylesheet" href="tema.css?v=20261003-cores">
   <link rel="stylesheet" href="wk.css?v=20261003-logo">
+  <link rel="stylesheet" href="fotos-profissionais.css?v=20261003-fotos">
+  <link rel="stylesheet" href="contato-rodape.css?v=20261003-contato">
   <script src="tema.js?v=20261003-cores" defer></script>
   <script src="supabase-config.js" defer></script>
-  <script src="saas.js?v=20261003-cores" defer></script>
+  <script src="saas.js?v=20261003-fotos" defer></script>
+  <script src="fotos-profissionais.js?v=20261003-fotos" defer></script>
   <script src="admin.js" defer></script>
-  <script src="admin-saas.js?v=20261003-cores" defer></script>
+  <script src="admin-saas.js?v=20261003-fotos" defer></script>
 </head>
 <body>
   <header class="admin-topo"><a href="index.html" aria-label="WK Agendamento — início"><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="56" height="56"></a><div><small>AGENDA BARBEARIA</small><h1>Painel do barbeiro</h1></div><button id="sair" hidden>Sair</button></header>
@@ -36,7 +39,21 @@
       <section id="horarios" class="area" hidden><div class="admin-titulo"><div><span class="etiqueta">Expediente e folgas</span><h2>Horários de trabalho</h2></div></div><section class="admin-card"><h3>Recebimento de agendamentos</h3><p id="estado-pausa" role="status">Consultando expediente…</p><button id="alternar-pausa" type="button" disabled>Pausar expediente</button><p>A pausa bloqueia novas reservas para toda a barbearia até você retomar. Não cancela atendimentos já agendados.</p></section><form id="form-expediente" class="admin-card"><p>Atendimentos de 40 minutos. Desmarque os dias em que a barbearia não abre. Para almoço ou descanso, preencha início e fim do intervalo; deixe ambos vazios se não houver intervalo.</p><div id="dias-semana"></div><button class="primario">Salvar expediente</button></form><form id="form-bloqueio" class="admin-card"><h3>Bloquear uma data ou horário</h3><div class="dupla"><label>Data<input name="data" type="date" required></label><label>Horário (vazio = dia inteiro)<input name="horario" type="time"></label></div><label>Motivo<input name="motivo" maxlength="200" placeholder="Folga, compromisso…"></label><button>Adicionar bloqueio</button></form><div id="lista-bloqueios" class="admin-lista"></div></section>
       <section id="configuracoes" class="area" hidden>
         <form id="form-configuracoes" class="admin-card"><h2>Minha barbearia</h2><label>Nome<input name="nome" maxlength="100" required></label><label>WhatsApp com DDD<input name="whatsapp" required></label><label>Logo (URL HTTPS)<input name="logo" type="url" placeholder="https://..."></label><button class="primario">Salvar dados</button></form>
-        <form id="form-profissional" class="admin-card"><h2>Profissionais</h2><label>Nome<input name="nome" maxlength="100" required></label><button>Adicionar profissional</button></form><div id="lista-profissionais" class="admin-lista"></div>
+        <form id="form-profissional" class="admin-card">
+          <h2 id="titulo-profissional">Adicionar profissional</h2>
+          <fieldset id="campos-profissional" class="campos-profissional">
+            <input type="hidden" name="id">
+            <label>Nome<input name="nome" maxlength="100" required></label>
+            <div class="editor-foto">
+              <div id="previa-foto-profissional"></div>
+              <label>Foto do profissional<input id="foto-profissional" name="arquivo_foto" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="ajuda-foto-profissional status-foto-profissional"></label>
+            </div>
+            <p id="ajuda-foto-profissional" class="ajuda-foto">JPG, PNG ou WebP, até 5 MB. Escolha uma foto com o rosto centralizado.</p>
+            <p id="status-foto-profissional" class="ajuda-foto" role="status">A foto é opcional e aparece para o cliente ao escolher o profissional.</p>
+            <button id="remover-foto-profissional" type="button" hidden>Remover foto</button>
+            <div class="acoes-profissional"><button id="salvar-profissional" type="submit" class="primario">Adicionar profissional</button><button id="cancelar-profissional" type="button" hidden>Cancelar edição</button></div>
+          </fieldset>
+        </form><div id="lista-profissionais" class="admin-lista"></div>
       </section>
       <section id="personalizacao" class="area" hidden>
         <form id="form-personalizacao" class="admin-card">
@@ -55,7 +72,7 @@
     </div>
   </main>
   <footer class="rodape-site">
-    <div class="assinatura-wk"><span>Desenvolvido por</span><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="64" height="64" loading="lazy" decoding="async"></div>
+    <div class="assinatura-wk"><div class="creditos-wk"><span>Desenvolvido por <strong>Wendell Kawhan</strong></span><a href="https://api.whatsapp.com/send?phone=5579996776478" target="_blank" rel="noopener noreferrer" aria-label="Falar com Wendell Kawhan pelo WhatsApp">Contato: (79) 99677-6478</a></div><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="64" height="64" loading="lazy" decoding="async"></div>
   </footer>
 </body>
 </html>

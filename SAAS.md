@@ -26,11 +26,23 @@ Execute `supabase-personalizacao.sql` após a instalação SaaS. A atualização
 
 As cores são salvas no banco, sem depender do navegador do barbeiro. Os tons de texto, superfícies e foco são derivados automaticamente para manter a leitura. Descartar prévia recupera as cores salvas; Restaurar padrão ainda exige Salvar cores. A demonstração não salva alterações.
 
+## Fotos dos profissionais
+
+Execute `supabase-fotos-profissionais.sql` após a instalação SaaS. No banco compartilhado em uso, esta atualização foi aplicada em 3 de outubro de 2026. Ela adiciona o caminho da foto ao cadastro e cria o bucket público `fotos-profissionais`, com limite de 5 MB e formatos JPG, PNG e WebP. Cada dono só pode enviar e excluir arquivos na pasta da sua barbearia. As imagens podem ser vistas pelos clientes pela URL pública; cadastros inativos continuam ocultos da lista pública.
+
+Em **Barbearia e profissionais**, selecione uma foto ao cadastrar ou clique em **Editar profissional** para atualizar uma pessoa existente. A prévia é local: só **Salvar profissional** publica a alteração. **Remover foto** também exige salvar, e **Cancelar edição** descarta a prévia. Sem foto, ou se o arquivo não carregar, aparecem as iniciais. As fotos são mostradas na escolha do profissional e na etapa de serviços.
+
+Cada envio usa um caminho novo para evitar imagem antiga em cache. Após uma troca ou remoção salva, o painel exclui o arquivo antigo se nenhum outro cadastro o estiver usando. Falhas de conexão podem deixar um arquivo sem referência; o painel preserva arquivos quando não consegue confirmar o estado salvo no banco.
+
+O rodapé das cinco páginas principais identifica **Wendell Kawhan**, com contato **(79) 99677-6478** por WhatsApp.
+
 ## Verificação antes de publicar
 
 O script `testar-saas.cjs` verifica a instalação e as regras de acesso em PostgreSQL local com PGlite. Instale `@electric-sql/pglite@0.3.14` em uma pasta temporária e execute `node testar-saas.cjs CAMINHO_DA_PASTA`, a partir da pasta do projeto. Ele cria duas contas e verifica isolamento de leitura/escrita, privacidade, reservas, conflito de horário e pausa. Essa validação não substitui os testes de autenticação no Supabase publicado.
 
 Para testar a inicialização das páginas e o fluxo do painel com API simulada, instale também `jsdom@26.1.0` na mesma pasta temporária e execute `node testar-interface.cjs CAMINHO_DA_PASTA`.
+
+Execute também `node testar-fotos.cjs CAMINHO_DA_PASTA` para verificar fotos, prévia, cancelamento, cadastro, troca, remoção, falhas de envio e os contatos no rodapé. O teste SQL inclui as políticas do Storage com o contrato mínimo local; os formatos e tamanho dos arquivos também são limitados pelo bucket no Supabase.
 
 Crie duas contas de teste, cada uma com sua barbearia. Confira que cada dono vê somente suas reservas e consegue alterar somente seus registros, inclusive por requisições diretas à API. Confira que reservas no mesmo horário de barbearias diferentes funcionam, que duas reservas concorrentes para o mesmo profissional não ocupam o mesmo horário e que a consulta pública não retorna dados de clientes. Teste os e-mails de confirmação e recuperação no endereço publicado.
 

@@ -1,0 +1,7 @@
+.creditos-wk {display: grid; gap: 5px; line-height: 1.6; font-size: .8rem;}
+.creditos-wk strong {font-weight: 600;}
+.creditos-wk a {color: var(--link-tema, #262878); text-underline-offset: 3px;}
+.creditos-wk a:hover {text-decoration-thickness: 2px;}
+.creditos-wk a:focus-visible {outline: 2px solid var(--foco-tema, #262878); outline-offset: 4px;}
+.assinatura-wk {color: var(--texto-secundario, #606068);}
+@media (max-width: 480px) {.rodape-site-com-acesso {justify-content: center;}}

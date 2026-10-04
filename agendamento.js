@@ -34,6 +34,8 @@ async function iniciarCatalogo(){
   const pessoas=await SaaS.profissionais();
   pessoas.forEach(p=>profissionais.set(p.id,p.nome));
   document.getElementById('profissional-escolhido').textContent=profissionais.get(escolha)||'Sem preferência';
+  const pessoa=pessoas.find(p=>p.id===escolha)||{id:'sem-preferencia',nome:'Sem preferência'};
+  document.getElementById('foto-profissional-escolhido').replaceChildren(FotosProfissionais.avatar(pessoa));
   const itens=await AgendaDB.request('servicos?select=*&ativo=eq.true&order=preco');
   for(const s of itens){
    const b=document.createElement('button');b.type='button';b.className='servico'+(s.categoria==='combo'?' combo':'');b.dataset.id=s.id;b.dataset.servico=s.nome;

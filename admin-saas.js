@@ -57,18 +57,111 @@ submitSeguro('form-configuracoes',async f=>{
 async function carregarProfissionais(){
   const pessoas=await api('/rest/v1/saas_profissionais?select=*&barbearia_id=eq.'+lojaAtual.id+'&order=nome');
   $('lista-profissionais').replaceChildren();
-  for(const p of pessoas)$('lista-profissionais').append(linha(p.nome,p.ativo?'Disponível para agendamento':'Inativo',[
-    acao(p.ativo?'Desativar':'Ativar',async()=>{await api('/rest/v1/saas_profissionais?id=eq.'+encodeURIComponent(p.id)+'&barbearia_id=eq.'+lojaAtual.id,'PATCH',{ativo:!p.ativo});await carregarProfissionais();}),
-  ]));
+  for(const p of pessoas){
+    const item=linha(p.nome,p.ativo?'Disponível para agendamento':'Inativo',[
+      acao('Editar profissional',()=>editarProfissional(p)),
+      acao(p.ativo?'Desativar':'Ativar',async()=>{await api('/rest/v1/saas_profissionais?id=eq.'+encodeURIComponent(p.id)+'&barbearia_id=eq.'+lojaAtual.id,'PATCH',{ativo:!p.ativo});await carregarProfissionais();}),
+    ]);
+    const identidade=el('div','','profissional-identidade');
+    identidade.append(FotosProfissionais.avatar(p),item.firstElementChild);
+    item.prepend(identidade);$('lista-profissionais').append(item);
+  }
+  if(!pessoas.length)$('lista-profissionais').append(el('p','Cadastre o primeiro profissional da sua equipe.'));
+}
+let profissionalEditado=null, fotoSelecionada=null, previaFoto='', fotoRemovida=false, versaoFoto=0, validandoFoto=false;
+function liberarPreviaFoto(){if(previaFoto)URL.revokeObjectURL(previaFoto);previaFoto='';}
+function atualizarPreviaFoto(){
+  const f=$('form-profissional');
+  $('previa-foto-profissional').replaceChildren(FotosProfissionais.avatar({nome:f.elements.nome.value||'Profissional',foto:fotoRemovida?'':profissionalEditado?.foto},previaFoto));
+  $('remover-foto-profissional').hidden=!fotoSelecionada&&(fotoRemovida||!profissionalEditado?.foto);
+}
+function limparEditorProfissional(){
+  ++versaoFoto;validandoFoto=false;liberarPreviaFoto();profissionalEditado=null;fotoSelecionada=null;fotoRemovida=false;
+  $('form-profissional').reset();$('form-profissional').elements.id.value='';
+  $('titulo-profissional').textContent='Adicionar profissional';$('salvar-profissional').textContent='Adicionar profissional';$('cancelar-profissional').hidden=true;
+  $('status-foto-profissional').textContent='A foto é opcional e aparece para o cliente ao escolher o profissional.';atualizarPreviaFoto();
+}
+function editarProfissional(p){
+  if($('campos-profissional').disabled)throw new Error('Aguarde o profissional ser salvo.');
+  limparEditorProfissional();profissionalEditado={...p};
+  const f=$('form-profissional');f.elements.id.value=p.id;f.elements.nome.value=p.nome;
+  $('titulo-profissional').textContent='Editar profissional';$('salvar-profissional').textContent='Salvar profissional';$('cancelar-profissional').hidden=false;
+  atualizarPreviaFoto();f.elements.nome.focus();
+}
+$('form-profissional').elements.nome.oninput=atualizarPreviaFoto;
+$('foto-profissional').onchange=async e=>{
+  const arquivo=e.target.files[0], versao=++versaoFoto;
+  liberarPreviaFoto();fotoSelecionada=null;atualizarPreviaFoto();
+  if(!arquivo){validandoFoto=false;return;}
+  validandoFoto=true;$('status-foto-profissional').textContent='Preparando a prévia da foto…';
+  let url='';
+  try{
+    FotosProfissionais.validarArquivo(arquivo);url=URL.createObjectURL(arquivo);
+    await new Promise((resolve,reject)=>{const imagem=new Image();imagem.onload=()=>resolve();imagem.onerror=()=>reject(new Error('Não foi possível abrir esta foto. Escolha outra imagem.'));imagem.src=url;});
+    if(versao!==versaoFoto){URL.revokeObjectURL(url);return;}
+    previaFoto=url;fotoSelecionada=arquivo;fotoRemovida=false;atualizarPreviaFoto();
+    $('status-foto-profissional').textContent='Prévia pronta. Salve o profissional para publicar a foto.';
+  }catch(e){
+    if(url)URL.revokeObjectURL(url);
+    if(versao===versaoFoto){$('foto-profissional').value='';$('status-foto-profissional').textContent=e.message;aviso(e.message);}
+  }finally{if(versao===versaoFoto)validandoFoto=false;}
+};
+$('remover-foto-profissional').onclick=()=>{
+  ++versaoFoto;validandoFoto=false;liberarPreviaFoto();fotoSelecionada=null;fotoRemovida=true;$('foto-profissional').value='';atualizarPreviaFoto();
+  $('status-foto-profissional').textContent='Salve o profissional para remover a foto.';
+};
+$('cancelar-profissional').onclick=limparEditorProfissional;
+async function enviarFotoProfissional(arquivo,loja,sessao){
+  FotosProfissionais.validarArquivo(arquivo);
+  const caminho=loja+'/'+crypto.randomUUID()+'.'+FotosProfissionais.tipos[arquivo.type];
+  const body=new FormData();body.append('cacheControl','3600');body.append('file',arquivo);
+  const r=await fetch(config.url+'/storage/v1/object/'+FotosProfissionais.bucket+'/'+caminho,{method:'POST',headers:{apikey:config.publicKey,Authorization:'Bearer '+sessao},body});
+  if(!r.ok)throw new Error(r.status===401?'Sessão expirada. Entre novamente para enviar a foto.':'Não foi possível enviar a foto. Confira sua conexão e tente novamente.');
+  return caminho;
+}
+async function excluirFotoProfissional(caminho,loja,sessao){
+  if(!FotosProfissionais.caminhoValido(caminho)||!caminho.startsWith(loja+'/'))return;
+  const r=await fetch(config.url+'/storage/v1/object/'+FotosProfissionais.bucket,{method:'DELETE',headers:{apikey:config.publicKey,Authorization:'Bearer '+sessao,'Content-Type':'application/json'},body:JSON.stringify({prefixes:[caminho]})});
+  if(!r.ok)throw new Error('Não foi possível excluir o arquivo anterior.');
 }
 submitSeguro('form-profissional',async f=>{
   if(demo)throw new Error('Entre na sua conta para cadastrar profissionais.');
-  await api('/rest/v1/saas_profissionais','POST',{barbearia_id:lojaAtual.id,nome:f.nome.value.trim()});f.reset();await carregarProfissionais();aviso('Profissional cadastrado.');
+  if(!lojaAtual||!token)throw new Error('Entre na sua conta para salvar profissionais.');
+  if(validandoFoto)throw new Error('Aguarde a prévia da foto ficar pronta.');
+  const nome=f.elements.nome.value.trim();if(!nome)throw new Error('Informe o nome do profissional.');
+  const loja=lojaAtual.id,sessao=token,anterior=profissionalEditado?.foto||'',editando=Boolean(f.elements.id.value),id=f.elements.id.value||crypto.randomUUID();
+  const campos=$('campos-profissional');campos.disabled=true;$('sair').disabled=true;
+  let foto=fotoRemovida?'':anterior,enviada='',salvo=false,limpezaPendente=false;
+  try{
+    if(fotoSelecionada){$('status-foto-profissional').textContent='Enviando a foto…';enviada=await enviarFotoProfissional(fotoSelecionada,loja,sessao);foto=enviada;}
+    let rows;
+    try{rows=await api('/rest/v1/saas_profissionais'+(editando?'?id=eq.'+encodeURIComponent(id)+'&barbearia_id=eq.'+loja:''),editando?'PATCH':'POST',editando?{nome,foto}:{id,barbearia_id:loja,nome,foto});}
+    catch(erro){
+      // A conexão pode cair depois que o banco salva. Confirma antes de oferecer uma nova tentativa.
+      try{rows=await api('/rest/v1/saas_profissionais?select=id,nome,foto&id=eq.'+encodeURIComponent(id)+'&barbearia_id=eq.'+loja);}catch{throw erro;}
+      if(!rows?.some(p=>p.id===id&&p.nome===nome&&p.foto===foto))throw erro;
+    }
+    if(!rows?.length)throw new Error('O profissional não foi salvo. Confira sua conexão e tente novamente.');
+    salvo=true;
+    if(anterior&&anterior!==foto){
+      // Uma imagem pode ter sido reutilizada em outro cadastro. Só exclui quando não há referência.
+      try{const referencias=await api('/rest/v1/saas_profissionais?select=id&barbearia_id=eq.'+loja+'&foto=eq.'+encodeURIComponent(anterior));if(!referencias.length)await excluirFotoProfissional(anterior,loja,sessao);}catch{limpezaPendente=true;}
+    }
+    limparEditorProfissional();
+    try{await carregarProfissionais();}catch{aviso('Profissional salvo. Atualize o painel para consultar a lista.');return;}
+    aviso((editando?'Profissional atualizado.':'Profissional cadastrado.')+(limpezaPendente?' A foto foi atualizada; o arquivo anterior não pôde ser excluído.':''));
+  }catch(e){
+    // Confere o banco antes da limpeza: uma falha de conexão pode ocorrer após o salvamento.
+    if(enviada&&!salvo)try{const referencias=await api('/rest/v1/saas_profissionais?select=id&barbearia_id=eq.'+loja+'&foto=eq.'+encodeURIComponent(enviada));if(!referencias.length)await excluirFotoProfissional(enviada,loja,sessao);}catch{}
+    $('status-foto-profissional').textContent=e.message;throw e;
+  }finally{campos.disabled=false;$('sair').disabled=false;}
 });
+limparEditorProfissional();
 const sairOriginal=$('sair').onclick;
 $('sair').onclick=async()=>{
   const atual=token;
   sairOriginal();lojaAtual=null;
+  limparEditorProfissional();$('lista-profissionais').replaceChildren();
   Tema.aplicar(Tema.padrao);
   mostrarFormulario('form-login');
   document.querySelector('.admin-topo small').textContent='AGENDA BARBEARIA';

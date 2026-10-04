@@ -1,0 +1,29 @@
+.foto-profissional {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border: 1px solid var(--borda-suave, #d8d6d3);
+  border-radius: 50%;
+  background: var(--superficie-suave, #eae8e5);
+  color: var(--link-tema, #262878);
+}
+.foto-profissional img, .foto-iniciais {grid-area: 1 / 1;}
+.foto-profissional img {display: block; width: 100%; height: 100%; object-fit: cover; object-position: center;}
+.foto-iniciais {font: 600 1.4rem Arial, sans-serif;}
+.profissional-identidade {display: flex; align-items: center; gap: 16px; min-width: 0;}
+.profissional-identidade > div {min-width: 0;}
+.profissional-identidade h2 {margin: 0;}
+.editor-foto {display: flex; align-items: center; gap: 20px; flex-wrap: wrap;}
+.editor-foto .foto-profissional {width: 112px; height: 112px;}
+.editor-foto label {flex: 1 1 220px;}
+.admin-main .ajuda-foto {margin: 0; font-size: .85rem;}
+.campos-profissional {display: grid; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0;}
+.acoes-profissional {display: flex; gap: 12px; flex-wrap: wrap;}
+@media (max-width: 480px) {
+  .profissional {padding: 18px 14px;}
+  .profissional .foto-profissional, .profissional-atual .foto-profissional {width: 72px; height: 72px;}
+  .linha-item .profissional-identidade {align-items: center;}
+}
