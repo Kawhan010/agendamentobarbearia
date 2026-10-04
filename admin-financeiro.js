@@ -24,22 +24,6 @@ window.FinanceiroAgenda={
       card.append(this.elemento('span',titulo),this.elemento('strong',this.moeda.format(Number(total))),this.elemento('small',quantidade+' atendimento'+(quantidade===1?'':'s')));
       cards.append(card);
     }
-    area.append(cards,this.elemento('p','Confirmados entram no total. Pendentes ficam à parte e cancelados não são somados.'));
-    if(!r.profissionais.length){area.append(this.elemento('p',data?'Nenhum agendamento nesta data.':'Nenhum agendamento cadastrado.'));return;}
-    const container=this.elemento('div','','tabela-totais');
-    const tabela=this.elemento('table');
-    tabela.append(this.elemento('caption','Valores por barbeiro'));
-    const head=this.elemento('thead'),cabecalho=this.elemento('tr');
-    for(const titulo of ['Barbeiro','Confirmados','Pendentes (previsto)']){const th=this.elemento('th',titulo);th.scope='col';cabecalho.append(th);}
-    head.append(cabecalho);tabela.append(head);
-    const body=this.elemento('tbody');
-    for(const p of r.profissionais){
-      const row=this.elemento('tr'),nome=this.elemento('th',p.nome||'Profissional');nome.scope='row';row.append(nome);
-      for(const [total,quantidade] of [[p.total_confirmado,p.confirmados],[p.total_pendente,p.pendentes]]){
-        const td=this.elemento('td');td.append(this.elemento('strong',this.moeda.format(Number(total))),this.elemento('small',quantidade+' atendimento'+(quantidade===1?'':'s')));row.append(td);
-      }
-      body.append(row);
-    }
-    tabela.append(body);container.append(tabela);area.append(container);
+    area.append(cards);
   },
 };

@@ -57,11 +57,12 @@ function resumo(data){
  await login.onsubmit({preventDefault(){},target:login,submitter:login.querySelector('button')});
  const texto=()=>d.getElementById('resumo-financeiro').textContent.replace(/\u00a0/g,' ');
  assert.ok(texto().includes('03/10/2026'));assert.ok(texto().includes('R$ 90,80'));assert.ok(texto().includes('R$ 15,25'));
- assert.equal(d.querySelectorAll('#resumo-financeiro tbody tr').length,2);
- assert.ok(texto().includes(pessoas[1].nome));assert.equal(d.querySelectorAll('#resumo-financeiro img').length,0);
+ assert.equal(d.querySelectorAll('#resumo-financeiro .total-agenda').length,2);
+ assert.equal(d.querySelectorAll('#resumo-financeiro table').length,0);
+ assert.equal(d.getElementById('resumo-financeiro').classList.contains('admin-card'),false);
  d.getElementById('filtro-data').value=outroDia;await d.getElementById('filtro-data').onchange();assert.ok(texto().includes('R$ 10,30'));assert.ok(!texto().includes('90,80'));
  d.getElementById('filtro-data').value='';await d.getElementById('filtro-data').onchange();assert.ok(texto().includes('todas as datas'));assert.ok(texto().includes('R$ 101,10'));
- d.getElementById('filtro-data').value='2026-01-01';await d.getElementById('filtro-data').onchange();assert.ok(texto().includes('R$ 0,00'));assert.ok(texto().includes('Nenhum agendamento nesta data'));
+ d.getElementById('filtro-data').value='2026-01-01';await d.getElementById('filtro-data').onchange();assert.ok(texto().includes('R$ 0,00'));assert.equal(d.querySelectorAll('#resumo-financeiro .total-agenda').length,2);
  d.getElementById('filtro-data').value=dia;await d.getElementById('filtro-data').onchange();
  await [...d.querySelectorAll('#lista-agenda button')].find(b=>b.textContent==='Confirmar').onclick();assert.ok(texto().includes('R$ 106,05'));assert.ok(texto().includes('R$ 0,00'));
  await [...d.querySelectorAll('#lista-agenda button')].find(b=>b.textContent==='Cancelar').onclick();assert.ok(texto().includes('R$ 85,95'));
@@ -73,5 +74,5 @@ function resumo(data){
  d.getElementById('filtro-data').value=outroDia;await d.getElementById('filtro-data').onchange();assert.ok(texto().includes('R$ 10,30'));
  w.FinanceiroAgenda.renderizar({...vazio,total_confirmado:null},dia);assert.ok(texto().includes('Não foi possível'));assert.ok(!texto().includes('R$'));
  await d.getElementById('sair').onclick();assert.equal(texto(),'');assert.equal(d.getElementById('painel').hidden,true);
- dom.window.close();console.log('OK: valores em reais, por barbeiro/data/todas as datas, dia vazio, confirmação, cancelamento, limpeza, falhas sem valores falsos, respostas fora de ordem, nomes seguros e logout.');
+ dom.window.close();console.log('OK: dois quadros compactos sem quadro externo, valores por data/todas as datas, dia vazio, confirmação, cancelamento, limpeza, falhas sem valores falsos, respostas fora de ordem e logout.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -58,7 +58,7 @@ Execute `node testar-duracoes.cjs CAMINHO_DA_PASTA` e `node testar-duracoes-inte
 
 ## Valores da agenda por dia e barbeiro
 
-Execute `supabase-resumo-financeiro.sql` após a instalação SaaS. Na aba **Agendamentos**, o filtro **Dia** também seleciona o resumo: mostra a soma dos preços salvos nos agendamentos confirmados e, separadamente, os valores previstos dos pendentes. Cancelados não entram nas somas. A tabela mostra os totais de cada barbeiro, inclusive profissionais inativos ou excluídos que tenham registros no período. Com o filtro vazio, o resumo abrange todas as datas.
+Execute `supabase-resumo-financeiro.sql` após a instalação SaaS. Na aba **Agendamentos**, o filtro **Dia** também seleciona o resumo: mostra a soma dos preços salvos nos agendamentos confirmados e, separadamente, os valores previstos dos pendentes. Cancelados não entram nas somas. O resumo é compacto, sem um quadro externo, e mostra apenas dois quadros: Confirmados e Pendentes. Os totais incluem registros de profissionais inativos ou excluídos que tenham agendamentos no período. Com o filtro vazio, o resumo abrange todas as datas.
 
 Confirmar, cancelar, atualizar a lista ou mudar a data recalcula o resumo. Alterações posteriores no preço do catálogo não alteram os valores já registrados. Os totais representam valores de agendamentos por status; o sistema não registra pagamentos recebidos. A limpeza permanente dos agendamentos também retira seus valores do resumo.
 
