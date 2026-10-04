@@ -5,4 +5,9 @@
 .admin-main button.perigo{border-color:var(--vermelho);color:var(--destaque-legivel,var(--vermelho))}
 .admin-main button.perigo:hover{background:var(--superficie-suave,#eae8e5)}
 #escopo-limpeza-agenda{font-size:.85rem}
+.admin-main #campos-duracoes{padding:0;border:0;min-width:0}
+.admin-main .duracao-profissional{grid-template-columns:minmax(0,1fr) minmax(160px,220px) auto;align-items:center;padding:16px 0;border-bottom:1px solid var(--borda,#ddd)}
+.duracao-profissional:last-child{border-bottom:0}
+.duracao-profissional .profissional-identidade{min-width:0}
+@media(max-width:700px){.admin-main .duracao-profissional{grid-template-columns:1fr}.duracao-profissional button{width:100%}}
 

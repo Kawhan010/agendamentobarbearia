@@ -59,7 +59,7 @@ async function carregarProfissionais(){
   $('lista-profissionais').replaceChildren();
   for(const p of pessoas){
     const excluir=acao('Excluir profissional',()=>excluirProfissional(p));excluir.classList.add('perigo');
-    const item=linha(p.nome,p.ativo?'Disponível para agendamento':'Inativo',[
+    const item=linha(p.nome,p.ativo?(p.duracao_minutos?'Disponível para agendamento':'Defina o tempo de atendimento na aba Horários'):'Inativo',[
       acao('Editar profissional',()=>editarProfissional(p)),
       acao(p.ativo?'Desativar':'Ativar',async()=>{if($('campos-profissional').disabled)throw new Error('Aguarde a alteração em andamento.');await api('/rest/v1/saas_profissionais?id=eq.'+encodeURIComponent(p.id)+'&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id,'PATCH',{ativo:!p.ativo});await carregarProfissionais();}),
       excluir,
@@ -69,6 +69,48 @@ async function carregarProfissionais(){
     item.prepend(identidade);$('lista-profissionais').append(item);
   }
   if(!pessoas.length)$('lista-profissionais').append(el('p','Cadastre o primeiro profissional da sua equipe.'));
+  renderizarDuracoes(pessoas);
+}
+function renderizarDuracoes(pessoas){
+  const lista=$('lista-duracoes');lista.replaceChildren();
+  for(const p of pessoas){
+    const f=el('form','','duracao-profissional');
+    const identidade=el('div','','profissional-identidade');
+    const texto=el('div');texto.append(el('strong',p.nome),el('p',p.ativo?(p.duracao_minutos?'Tempo de cada atendimento':'Informe o tempo para liberar novos agendamentos'):'Inativo — tempo para quando voltar a atender'));
+    identidade.append(FotosProfissionais.avatar(p),texto);
+    const label=el('label','Tempo de atendimento');
+    const input=el('input');input.name='duracao';input.type='number';input.min='1';input.max='1440';input.step='1';input.required=true;
+    input.setAttribute('aria-label','Tempo de atendimento de '+p.nome+' em minutos');
+    input.placeholder='Ex.: 25';input.value=String(p.duracao_minutos??'');label.append(input,el('small','Em minutos'));
+    const salvar=el('button','Salvar tempo','primario');salvar.type='submit';
+    f.append(identidade,label,salvar);lista.append(f);
+    f.onsubmit=async e=>{
+      e.preventDefault();
+      try{await salvarDuracaoProfissional(p,Number(input.value));}catch(err){aviso(err.message);}
+    };
+  }
+  if(!pessoas.length)lista.append(el('p','Cadastre um profissional na aba Profissionais para ajustar seu tempo de atendimento.'));
+}
+async function salvarDuracaoProfissional(p,tempo){
+  if(demo||!lojaAtual||!token)throw new Error('Entre na sua conta para ajustar o tempo de atendimento.');
+  if(!Number.isInteger(tempo)||tempo<1||tempo>1440)throw new Error('Informe um tempo em minutos inteiros, entre 1 e 1440.');
+  const campos=$('campos-duracoes'),profissional=$('campos-profissional');
+  if(campos.disabled||profissional.disabled)throw new Error('Aguarde a alteração em andamento.');
+  const loja=lojaAtual.id;
+  const filtro='&id=eq.'+encodeURIComponent(p.id)+'&excluido=eq.false&barbearia_id=eq.'+loja;
+  campos.disabled=true;profissional.disabled=true;$('sair').disabled=true;
+  try{
+    let rows;
+    try{rows=await api('/rest/v1/saas_profissionais?select=id,barbearia_id,duracao_minutos'+filtro,'PATCH',{duracao_minutos:tempo});}
+    catch(err){
+      // Confere uma atualização cuja resposta possa ter se perdido na conexão.
+      try{rows=await api('/rest/v1/saas_profissionais?select=id,barbearia_id,duracao_minutos'+filtro);}catch{throw err;}
+      if(!rows?.some(item=>item.id===p.id&&item.barbearia_id===loja&&item.duracao_minutos===tempo))throw err;
+    }
+    if(!rows?.some(item=>item.id===p.id&&item.barbearia_id===loja&&item.duracao_minutos===tempo))throw new Error('O tempo não foi salvo. Atualize a equipe e tente novamente.');
+    try{await carregarProfissionais();}catch{aviso('Tempo salvo. Atualize o painel para consultar a equipe.');return;}
+    aviso('Tempo de '+p.nome+' salvo: '+tempo+' minutos. Os agendamentos existentes mantêm o tempo original.');
+  }finally{campos.disabled=false;profissional.disabled=false;$('sair').disabled=false;}
 }
 async function excluirProfissional(p){
   if(demo||!lojaAtual||!token)throw new Error('Entre na sua conta para excluir profissionais.');
@@ -171,7 +213,7 @@ submitSeguro('form-profissional',async f=>{
     }
     limparEditorProfissional();
     try{await carregarProfissionais();}catch{aviso('Profissional salvo. Atualize o painel para consultar a lista.');return;}
-    aviso((editando?'Profissional atualizado.':'Profissional cadastrado.')+(limpezaPendente?' A foto foi atualizada; o arquivo anterior não pôde ser excluído.':''));
+    aviso((editando?'Profissional atualizado.':'Profissional cadastrado. Defina seu tempo de atendimento na aba Horários para liberar os agendamentos.')+(limpezaPendente?' A foto foi atualizada; o arquivo anterior não pôde ser excluído.':''));
   }catch(e){
     // Confere o banco antes da limpeza: uma falha de conexão pode ocorrer após o salvamento.
     if(enviada&&!salvo)try{const referencias=await api('/rest/v1/saas_profissionais?select=id&barbearia_id=eq.'+loja+'&foto=eq.'+encodeURIComponent(enviada));if(!referencias.length)await excluirFotoProfissional(enviada,loja,sessao);}catch{}
@@ -183,7 +225,7 @@ const sairOriginal=$('sair').onclick;
 $('sair').onclick=async()=>{
   const atual=token;
   sairOriginal();lojaAtual=null;
-  limparEditorProfissional();$('lista-profissionais').replaceChildren();
+  limparEditorProfissional();$('lista-profissionais').replaceChildren();$('lista-duracoes').replaceChildren();
   Tema.aplicar(Tema.padrao);
   mostrarFormulario('form-login');
   document.querySelector('.admin-topo small').textContent='AGENDA BARBEARIA';
@@ -237,5 +279,5 @@ submitSeguro('form-personalizacao',async()=>{
 const demonstracaoOriginal=$('demonstracao').onclick;
 $('demonstracao').onclick=async()=>{
   await demonstracaoOriginal();
-  if(!$('painel').hidden)carregarPersonalizacao();
+  if(!$('painel').hidden){carregarPersonalizacao();$('lista-duracoes').replaceChildren(el('p','Entre na sua conta para ajustar o tempo de cada profissional.'));}
 };

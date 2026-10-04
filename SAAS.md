@@ -16,7 +16,7 @@ Uma nova barbearia começa com catálogo vazio, um profissional e expediente pad
 
 O dono só pode gerenciar registros cujo `barbearia_id` corresponda ao vínculo armazenado em `saas_membros`. Os clientes consultam apenas informações públicas, catálogo ativo, profissionais ativos e disponibilidade. Telefones e nomes de clientes não têm leitura pública.
 
-As funções públicas de reserva validam a barbearia, serviço, profissional, horário, pausa e conflitos no banco. A confirmação continua pelo painel; o WhatsApp recebe o pedido e não cancela reservas automaticamente. Atendimentos continuam com duração fixa de 40 minutos.
+As funções públicas de reserva validam a barbearia, serviço, profissional, horário, pausa e conflitos no banco. A confirmação continua pelo painel; o WhatsApp recebe o pedido e não cancela reservas automaticamente. O tempo de cada novo atendimento segue a duração em minutos escolhida pelo profissional.
 
 A sessão administrativa fica em memória. Após recarregar a página ou expirar o token, entre novamente. Não há renovação automática nesta versão.
 
@@ -47,6 +47,14 @@ O rodapé das cinco páginas principais identifica **Wendell Kawhan**, com conta
 Execute `supabase-exclusoes.sql` após a instalação SaaS. **Excluir profissional**, em **Barbearia e profissionais**, pede confirmação e retira a pessoa da equipe e da seleção pública. O registro fica arquivado e inativo no banco para preservar seus agendamentos existentes e a integridade do histórico.
 
 Em **Agendamentos**, **Limpar lista** pede confirmação e exclui permanentemente os registros exibidos. Com uma data selecionada, só alcança essa data; com o filtro vazio, alcança todas as datas exibidas. A exclusão libera os horários reservados. Agendamentos recebidos depois da consulta ficam preservados. O botão fica desabilitado enquanto a lista carrega, quando está vazia ou durante a limpeza. A função do banco exige a conta do dono e respeita o isolamento entre barbearias.
+
+## Tempo de atendimento por profissional
+
+Execute `supabase-duracao-profissionais.sql` após a instalação SaaS e as demais atualizações. Em **Horários → Tempo de atendimento por profissional**, digite a quantidade de minutos desejada para cada pessoa e clique em **Salvar tempo**. O tempo é único por barbeiro e vale para todos os serviços dele. O campo aceita qualquer número inteiro de minutos entre 1 e 1440, inclusive 25 ou 35; não há uma lista fechada de opções. A alteração fica salva no banco da barbearia; novos profissionais começam sem tempo preenchido e só ficam disponíveis para novas reservas depois que seu tempo for escolhido e salvo. Os profissionais anteriores à atualização mantêm inicialmente os 40 minutos que já utilizavam, e podem alterar esse valor no painel.
+
+A agenda calcula a grade, o término antes do fechamento, os intervalos e os conflitos conforme a duração de cada profissional. A opção sem preferência reúne as vagas disponíveis da equipe e escolhe um profissional que possa atender naquele horário. Cada reserva guarda a duração usada ao agendar; alterar o tempo do barbeiro não modifica reservas existentes. As reservas anteriores a esta atualização mantêm 40 minutos. Bloqueios de horário continuam cobrindo 40 minutos; os bloqueios de dia inteiro e a pausa continuam valendo para toda a equipe.
+
+Execute `node testar-duracoes.cjs CAMINHO_DA_PASTA` e `node testar-duracoes-interface.cjs CAMINHO_DA_PASTA` para verificar a migração, grades com diferentes durações, preservação das reservas, conflitos, fechamento, intervalos, bloqueios, isolamento entre lojas e edição dos tempos no painel. Os testes usam PGlite e jsdom em dados isolados.
 
 ## Verificação antes de publicar
 

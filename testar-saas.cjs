@@ -22,14 +22,18 @@ const assert=require('node:assert/strict');
  await db.exec(fs.readFileSync('supabase-fotos-profissionais.sql','utf8'));
  await db.exec(fs.readFileSync('supabase-exclusoes.sql','utf8'));
  await db.exec(fs.readFileSync('supabase-exclusoes.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase-duracao-profissionais.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase-duracao-profissionais.sql','utf8'));
  const a='10000000-0000-4000-8000-000000000001', b='10000000-0000-4000-8000-000000000002';
  await db.query('insert into auth.users values($1),($2)',[a,b]);
  async function conta(user){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);await db.exec('set role authenticated');}
  await conta(a);
  const lojaA=(await db.query("select public.saas_criar_barbearia('Loja A','loja-a','5579999999999') id")).rows[0].id;
+ await db.query('update public.saas_profissionais set duracao_minutos=40 where barbearia_id=$1',[lojaA]);
  const servicoA=(await db.query("insert into public.saas_servicos(barbearia_id,nome,preco,categoria) values($1,'Corte',30,'individual') returning id",[lojaA])).rows[0].id;
  await conta(b);
  const lojaB=(await db.query("select public.saas_criar_barbearia('Loja B','loja-b','5579999999998') id")).rows[0].id;
+ await db.query('update public.saas_profissionais set duracao_minutos=40 where barbearia_id=$1',[lojaB]);
  const profissionalA=(await db.query('select id from public.saas_profissionais where barbearia_id=$1',[lojaA])).rows[0].id;
  const profissionalB=(await db.query('select id from public.saas_profissionais where barbearia_id=$1',[lojaB])).rows[0].id;
  const fotoA=lojaA+'/20000000-0000-4000-8000-000000000001.jpg',fotoB=lojaB+'/20000000-0000-4000-8000-000000000002.png';
@@ -100,7 +104,7 @@ const assert=require('node:assert/strict');
  await assert.rejects(()=>db.query("select public.saas_reservar($1,$2,$3,$4,$5,'Novo Cliente','79999999999')",[lojaA,dia,horarios[1].horario,profissionalA,servicoA]));
  await conta(a);
  // Outro profissional permite verificar que a limpeza realmente libera horários.
- const novo=(await db.query("insert into public.saas_profissionais(barbearia_id,nome) values($1,'Novo profissional') returning id",[lojaA])).rows[0].id;
+ const novo=(await db.query("insert into public.saas_profissionais(barbearia_id,nome,duracao_minutos) values($1,'Novo profissional',40) returning id",[lojaA])).rows[0].id;
  await db.exec('reset role;set role anon');
  const exibida=(await db.query("select public.saas_reservar($1,$2,$3,$4,$5,'Exibida','79999999999') r",[lojaA,dia,hora,novo,servicoA])).rows[0].r;
  const recebidaDepois=(await db.query("select public.saas_reservar($1,$2,$3,$4,$5,'Recebida depois','79999999999') r",[lojaA,dia,horarios[1].horario,novo,servicoA])).rows[0].r;

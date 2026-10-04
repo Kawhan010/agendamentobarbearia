@@ -56,6 +56,6 @@ window.SaaS = {
   },
   async profissionais() {
     const loja = await this.carregar();
-    return this.request('saas_profissionais?select=id,nome,foto&ativo=eq.true&barbearia_id=eq.' + loja.id + '&order=nome');
+    return this.request('saas_profissionais?select=id,nome,foto&ativo=eq.true&duracao_minutos=not.is.null&barbearia_id=eq.' + loja.id + '&order=nome');
   },
 };

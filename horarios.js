@@ -22,19 +22,14 @@ if(AgendaDB.ativa){
    const iso=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
    remotos.set(iso,await AgendaDB.horarios(iso,parametros.get('cabeleireiro')||'sem-preferencia'));
   }));
-  document.querySelector('#etapa-horarios > p').textContent='Atendimentos de 40 minutos. A disponibilidade será verificada novamente ao solicitar.';
+  document.querySelector('#etapa-horarios > p').textContent='Os horários seguem o tempo de atendimento de cada profissional. A disponibilidade será verificada novamente ao solicitar.';
   statusHorario.textContent='Selecione uma data.';
  }catch(e){statusHorario.textContent=e.message;return;}
 }
 for (let indice = 0; indice < 15; indice++) {
   const dia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + indice, 12);
   const valor = `${dia.getFullYear()}-${String(dia.getMonth() + 1).padStart(2, '0')}-${String(dia.getDate()).padStart(2, '0')}`;
-  const temHorario = Array.from({ length: 13 }, (_, indiceHorario) => {
-    const minutos = 9 * 60 + indiceHorario * 40;
-    const inicio = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), Math.floor(minutos / 60), minutos % 60);
-    return inicio > hoje;
-  }).some(Boolean);
-  const bloqueado = AgendaDB.ativa ? !remotos.get(valor)?.length : dia.getDay() === 1 || !temHorario;
+  const bloqueado = !remotos.get(valor)?.length;
   if (!bloqueado) datasPermitidas.add(valor);
   const label = document.createElement('label');
   label.className = 'horario dia';
@@ -80,8 +75,7 @@ function renderizarHorarios() {
   resumoDia.hidden = false;
   tituloHorarios.textContent = 'Qual o melhor horário para você?';
   document.getElementById('texto-dia-escolhido').textContent = new Date(`${dataSelecionada}T12:00:00`).toLocaleDateString('pt-BR', { dateStyle: 'full' });
-  // Grade provisória: ajustar ao expediente e à duração dos serviços ao integrar a agenda.
-  const lista = AgendaDB.ativa ? remotos.get(dataSelecionada).map(h=>h.horario) : Array.from({length:13},(_,i)=>{const m=540+i*40;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');});
+  const lista = remotos.get(dataSelecionada).map(h=>h.horario);
   for (const hora of lista) {
     if (new Date(`${dataSelecionada}T${hora}`) <= agora) continue;
     const botao = document.createElement('button');
