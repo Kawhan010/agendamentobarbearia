@@ -14,7 +14,7 @@ async function abrir(page,query=''){
   if(url.includes('/auth/v1/'))return response({});
   if(url.includes('saas_membros'))return response([{barbearia_id:loja.id}]);
   if(url.includes('saas_barbearias'))return response([{...loja}]);
-  if(url.includes('saas_profissionais')){
+  if(url.includes('/saas_profissionais')){
    const filtro=new URL(url).searchParams;const id=filtro.get('id')?.slice(3);
    if(options.method==='PATCH'){
     const body=JSON.parse(options.body),p=pessoas.find(p=>p.id===id);

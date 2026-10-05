@@ -11,14 +11,16 @@
   <link rel="stylesheet" href="wk.css?v=20261003-logo">
   <link rel="stylesheet" href="fotos-profissionais.css?v=20261003-fotos">
   <link rel="stylesheet" href="contato-rodape.css?v=20261003-contato">
+  <link rel="stylesheet" href="admin-rotina.css?v=20261004-rotina">
   <script src="tema.js?v=20261003-cores" defer></script>
   <script src="supabase-config.js" defer></script>
   <script src="saas.js?v=20261004-duracoes" defer></script>
   <script src="fotos-profissionais.js?v=20261003-fotos" defer></script>
   <script src="admin-whatsapp.js?v=20261004-agradecimento" defer></script>
   <script src="admin-financeiro.js?v=20261004-resumo-compacto" defer></script>
-  <script src="admin.js?v=20261004-confirmacao-manual" defer></script>
-  <script src="admin-saas.js?v=20261004-duracoes" defer></script>
+  <script src="admin.js?v=20261004-rotina" defer></script>
+  <script src="admin-saas.js?v=20261004-rotina" defer></script>
+  <script src="admin-rotina.js?v=20261004-rotina" defer></script>
 </head>
 <body>
   <header class="admin-topo"><a href="index.html" aria-label="WK Agendamento — início"><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="56" height="56"></a><div><small>AGENDA BARBEARIA</small><h1>Painel do barbeiro</h1></div><button id="sair" hidden>Sair</button></header>
@@ -35,8 +37,57 @@
     </section>
     <div id="painel" hidden>
       <section class="admin-card"><h2 id="nome-barbearia"></h2><p>Compartilhe com seus clientes: <a id="link-agendamento" target="_blank" rel="noopener"></a></p></section>
-      <nav class="admin-nav" aria-label="Áreas do painel"><button data-area="agenda" aria-pressed="true">Agendamentos</button><button data-area="servicos" aria-pressed="false">Serviços e preços</button><button data-area="horarios" aria-pressed="false">Horários</button><button data-area="configuracoes" aria-pressed="false">Barbearia e profissionais</button><button data-area="personalizacao" aria-pressed="false">Personalização</button></nav>
-      <section id="agenda" class="area"><div class="admin-titulo"><div><span class="etiqueta">Sua rotina</span><h2>Agendamentos</h2></div><label>Dia<input id="filtro-data" type="date"></label><button id="atualizar">Atualizar</button><button id="limpar-agendamentos" type="button" class="perigo" aria-describedby="escopo-limpeza-agenda" disabled>Limpar lista</button></div><p><strong>Confirmar</strong> salva apenas no site. Depois, clique em <strong>Confirmar no WhatsApp</strong> para abrir a mensagem e toque em <strong>Enviar</strong> no WhatsApp para avisar o cliente.</p><p id="escopo-limpeza-agenda">Selecione uma data para consultar e limpar seus agendamentos. Deixe o filtro vazio para consultar todas as datas.</p><section id="resumo-financeiro" class="resumo-financeiro" aria-label="Resumo dos valores da agenda" aria-live="polite"></section><div id="lista-agenda" class="admin-lista"></div></section>
+      <nav class="admin-nav" aria-label="Áreas do painel"><button data-area="agenda" aria-pressed="true">Agendamentos</button><button data-area="clientes" aria-pressed="false">Clientes</button><button data-area="caixa" aria-pressed="false">Caixa</button><button data-area="espera" aria-pressed="false">Lista de espera</button><button data-area="servicos" aria-pressed="false">Serviços e preços</button><button data-area="horarios" aria-pressed="false">Horários</button><button data-area="configuracoes" aria-pressed="false">Barbearia e profissionais</button><button data-area="personalizacao" aria-pressed="false">Personalização</button></nav>
+      <section id="agenda" class="area"><div class="admin-titulo"><div><span class="etiqueta">Sua rotina</span><h2>Agendamentos</h2></div><button id="novo-agendamento" type="button" class="primario">Novo agendamento</button><label>Dia<input id="filtro-data" type="date"></label><button id="atualizar">Atualizar</button><button id="limpar-agendamentos" type="button" class="perigo" aria-describedby="escopo-limpeza-agenda" disabled>Limpar lista</button></div><p><strong>Confirmar</strong> salva no site. Para avisar o cliente, abra <strong>Confirmar no WhatsApp</strong> e toque em <strong>Enviar</strong> no WhatsApp.</p><p id="escopo-limpeza-agenda">Atendimentos concluídos, faltas e pagamentos permanecem no histórico.</p><section id="resumo-financeiro" class="resumo-financeiro" aria-label="Resumo dos valores da agenda" aria-live="polite"></section><div id="lista-agenda" class="admin-lista"></div><div class="paginacao" id="paginas-agenda" hidden><button id="agenda-anterior" type="button">Anterior</button><span id="pagina-agenda" role="status"></span><button id="agenda-proxima" type="button">Próxima</button></div></section>
+
+      <section id="clientes" class="area" hidden>
+        <div class="admin-titulo"><div><span class="etiqueta">Quem volta à sua cadeira</span><h2>Clientes</h2></div></div>
+        <form id="buscar-clientes" class="busca-rotina"><label>Nome ou telefone<input name="busca" type="search" maxlength="100" placeholder="Buscar cliente"></label><button type="submit">Buscar</button></form>
+        <p>O cadastro é criado a partir dos agendamentos. Abra um cliente para consultar cortes, faltas e anotar suas preferências.</p>
+        <div id="lista-clientes" class="admin-lista" aria-live="polite"></div>
+        <div class="paginacao"><button id="clientes-anterior" type="button">Anterior</button><span id="pagina-clientes" role="status"></span><button id="clientes-proxima" type="button">Próxima</button></div>
+      </section>
+
+      <section id="caixa" class="area" hidden>
+        <div class="admin-titulo"><div><span class="etiqueta">Valores recebidos</span><h2>Caixa</h2></div><button id="caixa-hoje" type="button">Hoje</button><button id="caixa-mes" type="button">Este mês</button></div>
+        <form id="filtro-caixa" class="filtros-caixa"><label>De<input name="inicio" type="date" required></label><label>Até<input name="fim" type="date" required></label><button type="submit">Consultar</button></form>
+        <p>Recebimentos entram pela data em que foram pagos. O saldo é a diferença entre recebimentos e despesas registrados no período.</p>
+        <div id="totais-caixa" class="cards-caixa" aria-live="polite"></div>
+        <div id="formas-caixa" class="formas-caixa"></div>
+        <div class="admin-colunas caixa-colunas">
+          <form id="form-despesa" class="admin-card"><h3>Registrar despesa</h3><label>Descrição<input name="descricao" maxlength="200" required placeholder="Ex.: lâminas e produtos"></label><label>Valor (R$)<input name="valor" type="number" min="0.01" max="99999999.99" step="0.01" required></label><label>Forma de pagamento<select name="forma"><option value="pix">Pix</option><option value="dinheiro">Dinheiro</option><option value="cartao">Cartão</option></select></label><label>Data<input name="data" type="date" required></label><button type="submit" class="primario">Salvar despesa</button></form>
+          <div><h3>Despesas do período</h3><div id="lista-despesas" class="admin-lista"></div><div class="paginacao"><button id="despesas-anterior" type="button">Anterior</button><span id="pagina-despesas" role="status"></span><button id="despesas-proxima" type="button">Próxima</button></div></div>
+        </div>
+        <h3>Recebimentos do período</h3><div id="lista-recebimentos" class="admin-lista"></div><div class="paginacao"><button id="recebimentos-anterior" type="button">Anterior</button><span id="pagina-recebimentos" role="status"></span><button id="recebimentos-proxima" type="button">Próxima</button></div>
+      </section>
+
+      <section id="espera" class="area" hidden>
+        <div class="admin-titulo"><div><span class="etiqueta">Preencha as vagas que surgirem</span><h2>Lista de espera</h2></div><button id="nova-espera" type="button" class="primario">Adicionar cliente à espera</button><button id="atualizar-espera" type="button">Atualizar</button></div>
+        <p>Quando abrir uma vaga, use <strong>Avisar no WhatsApp</strong>. O cliente só ocupa o horário depois que você salvar o agendamento.</p>
+        <label class="filtro-espera">Mostrar<select id="estado-espera"><option value="abertos">Aguardando e contatados</option><option value="agendado">Agendados</option><option value="encerrado">Encerrados</option></select></label>
+        <div id="lista-espera" class="admin-lista" aria-live="polite"></div><div class="paginacao"><button id="espera-anterior" type="button">Anterior</button><span id="pagina-espera" role="status"></span><button id="espera-proxima" type="button">Próxima</button></div>
+      </section>
+
+      <dialog id="dialog-agendamento" class="dialog-rotina" aria-labelledby="titulo-agendamento">
+        <div class="dialog-titulo"><h2 id="titulo-agendamento">Novo agendamento</h2><button type="button" data-fechar="dialog-agendamento" aria-label="Fechar novo agendamento">Fechar</button></div>
+        <form id="form-agendamento-painel"><fieldset><label>Nome do cliente<input name="cliente" maxlength="100" required autocomplete="name"></label><label>Telefone com DDD<input name="telefone" inputmode="tel" maxlength="20" required autocomplete="tel"></label><div class="dupla"><label>Profissional<select name="profissional" required></select></label><label>Serviço<select name="servico" required></select></label></div><div class="dupla"><label>Data<input name="data" type="date" required></label><label>Horário disponível<select name="horario" required></select></label></div><p id="aviso-vagas" class="aviso-form" role="status"></p><p class="ajuda-rotina">Para registrar um encaixe de hoje, você também pode escolher um horário que já começou. As vagas respeitam o expediente, os intervalos e o tempo do profissional.</p><button type="submit" class="primario">Salvar agendamento</button></fieldset></form>
+      </dialog>
+
+      <dialog id="dialog-pagamento" class="dialog-rotina" aria-labelledby="titulo-pagamento">
+        <div class="dialog-titulo"><h2 id="titulo-pagamento">Registrar pagamento</h2><button type="button" data-fechar="dialog-pagamento">Fechar</button></div><p id="cliente-pagamento"></p>
+        <form id="form-pagamento"><fieldset><label>Valor recebido (R$)<input name="valor" type="number" min="0.01" max="99999999.99" step="0.01" required></label><label>Forma de pagamento<select name="forma"><option value="pix">Pix</option><option value="dinheiro">Dinheiro</option><option value="cartao">Cartão</option></select></label><label>Data do recebimento<input name="data" type="date" required></label><p class="ajuda-rotina">Registrar o pagamento não conclui o atendimento. Se corrigir um pagamento, o valor anterior será substituído.</p><button type="submit" class="primario">Salvar pagamento</button></fieldset></form>
+      </dialog>
+
+      <dialog id="dialog-cliente" class="dialog-rotina dialog-historico" aria-labelledby="titulo-cliente">
+        <div class="dialog-titulo"><h2 id="titulo-cliente">Histórico do cliente</h2><button type="button" data-fechar="dialog-cliente">Fechar</button></div>
+        <form id="form-cliente"><fieldset><label>Nome<input name="nome" maxlength="100" required></label><p id="telefone-cliente"></p><label>Preferências e observações<textarea name="observacoes" maxlength="2000" rows="3" placeholder="Ex.: degradê baixo, máquina 1"></textarea></label><button type="submit">Salvar observações</button></fieldset></form>
+        <p id="resumo-cliente" role="status"></p><div id="historico-cliente" class="admin-lista"></div><div class="paginacao"><button id="historico-anterior" type="button">Anterior</button><span id="pagina-historico" role="status"></span><button id="historico-proxima" type="button">Próxima</button></div>
+      </dialog>
+
+      <dialog id="dialog-espera" class="dialog-rotina" aria-labelledby="titulo-espera">
+        <div class="dialog-titulo"><h2 id="titulo-espera">Adicionar à lista de espera</h2><button type="button" data-fechar="dialog-espera">Fechar</button></div>
+        <form id="form-espera"><fieldset><label>Nome do cliente<input name="cliente" maxlength="100" required></label><label>Telefone com DDD<input name="telefone" inputmode="tel" maxlength="20" required></label><div class="dupla"><label>Serviço<select name="servico" required></select></label><label>Profissional<select name="profissional"><option value="">Qualquer profissional</option></select></label></div><label>Data desejada (opcional)<input name="data" type="date"></label><div class="dupla"><label>A partir de (opcional)<input name="inicio" type="time"></label><label>Até (opcional)<input name="fim" type="time"></label></div><label>Observações<textarea name="observacoes" maxlength="500" rows="2"></textarea></label><button type="submit" class="primario">Salvar na lista de espera</button></fieldset></form>
+      </dialog>
       <section id="servicos" class="area" hidden><div class="admin-titulo"><div><span class="etiqueta">Seu catálogo</span><h2>Serviços e preços</h2></div></div><div class="admin-colunas"><form id="form-servico" class="admin-card"><h3 id="titulo-editor">Adicionar serviço</h3><input type="hidden" name="id"><label>Nome<input name="nome" maxlength="100" required></label><label>Descrição<textarea name="descricao" maxlength="300"></textarea></label><div class="dupla"><label>Preço (R$)<input name="preco" type="number" min="0.01" step="0.01" required></label><label>Categoria<select name="categoria"><option value="individual">Individual</option><option value="combo">Combo</option></select></label></div><label>Imagem (caminho ou URL HTTPS)<input name="imagem" placeholder="assets/corte.jpg"></label><button class="primario">Salvar serviço</button><button type="button" id="limpar-servico">Novo serviço</button></form><div id="lista-servicos" class="admin-lista"></div></div></section>
       <section id="horarios" class="area" hidden><div class="admin-titulo"><div><span class="etiqueta">Expediente e folgas</span><h2>Horários de trabalho</h2></div></div><section class="admin-card"><h3>Recebimento de agendamentos</h3><p id="estado-pausa" role="status">Consultando expediente…</p><button id="alternar-pausa" type="button" disabled>Pausar expediente</button><p>A pausa bloqueia novas reservas para toda a barbearia até você retomar. Não cancela atendimentos já agendados.</p></section><section class="admin-card"><h3>Tempo de atendimento por profissional</h3><p>Digite o tempo em minutos que cada barbeiro precisa para atender. Você pode informar 20, 25, 30, 35, 40 ou outro valor. O tempo vale para todos os serviços dele e define os horários disponíveis para novas reservas.</p><p>Agendamentos existentes mantêm a duração registrada quando foram marcados.</p><fieldset id="campos-duracoes"><div id="lista-duracoes" class="admin-lista"></div></fieldset></section><form id="form-expediente" class="admin-card"><p>Desmarque os dias em que a barbearia não abre. Para almoço ou descanso, preencha início e fim do intervalo; deixe ambos vazios se não houver intervalo.</p><div id="dias-semana"></div><button class="primario">Salvar expediente</button></form><form id="form-bloqueio" class="admin-card"><h3>Bloquear uma data ou horário</h3><div class="dupla"><label>Data<input name="data" type="date" required></label><label>Horário (bloqueia 40 min; vazio = dia inteiro)<input name="horario" type="time"></label></div><label>Motivo<input name="motivo" maxlength="200" placeholder="Folga, compromisso…"></label><button>Adicionar bloqueio</button></form><div id="lista-bloqueios" class="admin-lista"></div></section>
       <section id="configuracoes" class="area" hidden>

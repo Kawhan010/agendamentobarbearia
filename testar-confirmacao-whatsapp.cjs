@@ -24,7 +24,7 @@ async function abrir(opcoes={}){
     if(url.includes('/auth/v1/'))return resposta({});
     if(url.includes('saas_membros'))return resposta([{barbearia_id:loja.id}]);
     if(url.includes('saas_barbearias'))return resposta([loja]);
-    if(url.includes('saas_profissionais')){
+    if(url.includes('/saas_profissionais')){
       // Um cadastro arquivado ainda fornece o nome nos atendimentos existentes.
       return resposta(parsed.searchParams.has('id')?[{id:'profissional-teste',nome:'André Salles',ativo:false,excluido:true}]:[]);
     }
@@ -97,7 +97,7 @@ const patches=teste=>teste.requests.filter(r=>r.options.method==='PATCH'&&r.url.
   // Outro painel cancelou o atendimento: não prepara nova confirmação.
   t.reserva.status='cancelado';await botao(t,'Confirmar no WhatsApp').onclick();
   assert.equal(t.janelas[2].destinos.length,0);assert.equal(t.janelas[2].closed,true);
-  assert.equal(t.d.querySelectorAll('#lista-agenda button').length,0);
+  assert.deepEqual([...t.d.querySelectorAll('#lista-agenda button')].map(b=>b.textContent),['Histórico do cliente']);
   t.dom.window.close();
   t=await abrir({bloquearPopup:true});await botao(t,'Confirmar').onclick();
   assert.equal(t.reserva.status,'confirmado');assert.equal(t.janelas.length,0);assert.equal(t.aberturas,0);assert.equal(t.d.querySelector('#aviso a'),null);

@@ -15,7 +15,7 @@ async function abrir(page,query='?barbearia=loja-teste'){
   if(url.includes('saas_membros'))return response([{barbearia_id:loja.id}]);
   if(url.includes('saas_barbearias')){if(options.method==='PATCH')Object.assign(loja,JSON.parse(options.body));return response([{...loja}]);}
   if(url==='catalogo-inicial.json')return response([{nome:'Corte',preco:30,categoria:'individual',ativo:true}]);
-  if(url.includes('saas_profissionais'))return response([{id:'profissional-teste',nome:'Barbeiro Teste',ativo:true}]);
+  if(url.includes('/saas_profissionais'))return response([{id:'profissional-teste',nome:'Barbeiro Teste',ativo:true}]);
   if(url.includes('saas_servicos'))return response([{id:'servico-teste',nome:'Corte',preco:30,categoria:'individual',imagem:'',descricao:'',ativo:true}]);
   if(url.includes('saas_expediente'))return response(Array.from({length:7},(_,id)=>({id,aberto:true,inicio:'09:00',fim:'18:00',intervalo_inicio:null,intervalo_fim:null})));
   if(url.includes('saas_controle_agenda'))return response([{pausado:false}]);

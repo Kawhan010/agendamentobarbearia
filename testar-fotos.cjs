@@ -21,7 +21,7 @@ async function abrir(page,query=''){
     if(url.includes('/auth/v1/'))return response({});
     if(url.includes('saas_membros'))return response([{barbearia_id:loja.id}]);
     if(url.includes('saas_barbearias'))return response([loja]);
-    if(url.includes('saas_profissionais')){
+    if(url.includes('/saas_profissionais')){
       const id=parsed.searchParams.get('id')?.slice(3),foto=parsed.searchParams.get('foto')?.slice(3);
       const rows=pessoas.filter(p=>(!id||p.id===id)&&(foto===undefined||p.foto===foto));
       if(method==='POST'){const p={...JSON.parse(options.body),ativo:true};pessoas.push(p);return response([p]);}

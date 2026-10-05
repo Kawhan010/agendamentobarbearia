@@ -29,7 +29,7 @@ function resumo(data){
   if(raw.includes('/auth/v1/'))return resposta({});
   if(raw.includes('saas_membros'))return resposta([{barbearia_id:loja.id}]);
   if(raw.includes('saas_barbearias'))return resposta([loja]);
-  if(raw.includes('saas_profissionais'))return resposta(pessoas.filter(p=>url.searchParams.get('excluido')!=='eq.false'||!p.excluido));
+  if(raw.includes('/saas_profissionais'))return resposta(pessoas.filter(p=>url.searchParams.get('excluido')!=='eq.false'||!p.excluido));
   if(raw.includes('saas_servicos'))return resposta([]);
   if(raw.includes('saas_expediente'))return resposta(Array.from({length:7},(_,id)=>({id,aberto:true,inicio:'09:00',fim:'18:00',intervalo_inicio:null,intervalo_fim:null})));
   if(raw.includes('saas_controle_agenda'))return resposta([{pausado:false}]);

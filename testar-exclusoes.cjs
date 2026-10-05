@@ -24,7 +24,7 @@ function filtrar(rows,url){
     if(url.includes('/auth/v1/'))return resposta({});
     if(url.includes('saas_membros'))return resposta([{barbearia_id:loja.id}]);
     if(url.includes('saas_barbearias'))return resposta([loja]);
-    if(url.includes('saas_profissionais')){
+    if(url.includes('/saas_profissionais')){
       const rows=filtrar(pessoas,parsed);
       if(method==='PATCH'){
         if(negarProfissional)return resposta({message:'Sem permissão para excluir.'},false,403);
@@ -103,7 +103,8 @@ function filtrar(rows,url){
   filtro.value='';await filtro.onchange();
   assert.equal(d.querySelectorAll('#lista-agenda .linha-item').length,2);
   assert.ok(d.getElementById('lista-agenda').textContent.includes('04/10/2026'));
-  assert.ok(d.getElementById('escopo-limpeza-agenda').textContent.includes('todos os agendamentos'));
+  assert.ok(d.getElementById('escopo-limpeza-agenda').textContent.includes('desta página'));
+  assert.ok(d.getElementById('escopo-limpeza-agenda').textContent.includes('preservados'));
   await limpar.onclick();
   assert.ok(confirmacoes.at(-1).includes('de todas as datas'));
   assert.deepEqual(JSON.parse(limpezas()[1].options.body).reservas.sort(),['nova','r3']);

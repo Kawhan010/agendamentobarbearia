@@ -94,7 +94,7 @@ async function renderAgenda(){
   let financeiro;
   try{
     const resultados=await Promise.allSettled([
-      demo?Promise.resolve([]):api('/rest/v1/reservas?select=*&order=horario'+(data?'&data=eq.'+data:'')),
+      demo?Promise.resolve([]):api('/rest/v1/reservas?select='+(window.RotinaPainel?'*,saas_pagamentos(valor,forma,data),saas_profissionais(nome)':'*')+'&order=data,horario,id'+(data?'&data=eq.'+data:'')+(window.RotinaPainel?'&limit=51&offset='+RotinaPainel.offsetAgenda:'')),
       demo?Promise.resolve(FinanceiroAgenda.vazio):api('/rest/v1/rpc/saas_resumo_financeiro','POST',{loja:lojaAtual.id,dia:data||null}),
     ]);
     if(resultados[0].status==='rejected')throw resultados[0].reason;
@@ -108,12 +108,17 @@ async function renderAgenda(){
     throw e;
   }
   if(versao!==versaoAgenda)return;
+  if(window.RotinaPainel){RotinaPainel.paginarAgenda(reservas.length);reservas=reservas.slice(0,50);}
   reservasExibidas=reservas;dataAgendaExibida=data;atualizarBotaoLimpeza();
   if(financeiro.status==='fulfilled')FinanceiroAgenda.renderizar(financeiro.value,data);
   else FinanceiroAgenda.estado(data,'Não foi possível carregar o resumo. Clique em Atualizar para tentar novamente.');
   $('lista-agenda').replaceChildren();
   if(!reservas.length)$('lista-agenda').append(el('p',demo?'Nenhum agendamento de demonstração.':data?'Nenhum agendamento nesta data.':'Nenhum agendamento cadastrado.'));
-  reservas.forEach(r=>$('lista-agenda').append(linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+' • '+r.status,r.status==='cancelado'?[]:[acao(r.status==='confirmado'?'Confirmar no WhatsApp':'Confirmar',()=>confirmarAgendamento(r,r.status!=='confirmado')),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})])));
+  reservas.forEach(r=>{
+    const botoes=window.RotinaPainel?RotinaPainel.botoesReserva(r):r.status==='cancelado'?[]:[acao(r.status==='confirmado'?'Confirmar no WhatsApp':'Confirmar',()=>confirmarAgendamento(r,r.status!=='confirmado')),acao('Cancelar',async()=>{await salvar('reservas',r.id,{status:'cancelado'});await renderAgenda();})];
+    const item=linha((data?'':r.data.split('-').reverse().join('/')+' • ')+r.horario.slice(0,5)+' • '+r.cliente,r.telefone+' • '+r.servico_nome+(window.RotinaPainel?'':' • '+r.status),botoes);
+    if(window.RotinaPainel)RotinaPainel.decorarReserva(item,r);$('lista-agenda').append(item);
+  });
   if(confirmandoAgenda||limpandoAgenda)$('lista-agenda').querySelectorAll('button').forEach(b=>b.disabled=true);
 }
 function janelaConfirmacao(){
@@ -179,14 +184,17 @@ async function confirmarAgendamento(reserva,confirmar=true){
   }
 }
 function atualizarBotaoLimpeza(){
-  $('limpar-agendamentos').disabled=limpandoAgenda||confirmandoAgenda||dataAgendaExibida===null||!reservasExibidas.length;
+  const quantidade=reservasExibidas.filter(r=>!window.RotinaPainel||RotinaPainel.podeLimpar(r)).length;
+  $('limpar-agendamentos').disabled=limpandoAgenda||confirmandoAgenda||dataAgendaExibida===null||!quantidade;
   $('escopo-limpeza-agenda').textContent=erroAgenda?'Atualize a lista para carregar os agendamentos antes de limpar.':dataAgendaExibida===null?'Carregando agendamentos…':dataAgendaExibida?'Limpar lista exclui apenas os agendamentos de '+dataAgendaExibida.split('-').reverse().join('/')+'.':'Limpar lista exclui todos os agendamentos da sua barbearia exibidos abaixo.';
+  if(window.RotinaPainel&&dataAgendaExibida!==null&&!erroAgenda)$('escopo-limpeza-agenda').textContent='Limpar lista remove '+quantidade+' agendamento(s) desta página. Atendimentos concluídos, faltas e pagamentos são preservados.';
 }
 $('limpar-agendamentos').onclick=async()=>{
   if(limpandoAgenda||confirmandoAgenda||dataAgendaExibida===null||!reservasExibidas.length)return;
   if(demo){aviso('Entre na sua conta para limpar agendamentos.');return;}
   if(!lojaAtual||!token){aviso('Entre na sua conta para limpar agendamentos.');return;}
-  const ids=[...new Set(reservasExibidas.map(r=>r.id))],loja=lojaAtual.id;
+  const ids=[...new Set(reservasExibidas.filter(r=>!window.RotinaPainel||RotinaPainel.podeLimpar(r)).map(r=>r.id))],loja=lojaAtual.id;
+  if(!ids.length){aviso('Os atendimentos desta página fazem parte do histórico e não serão excluídos.');return;}
   const periodo=dataAgendaExibida?'de '+dataAgendaExibida.split('-').reverse().join('/'):'de todas as datas';
   if(!window.confirm('Excluir permanentemente '+ids.length+' agendamento'+(ids.length===1?'':'s')+' '+periodo+' exibido'+(ids.length===1?'':'s')+' nesta lista?\n\nIsso libera os horários reservados e remove os valores desses registros do resumo. Esta ação não pode ser desfeita.'))return;
   limpandoAgenda=true;atualizarBotaoLimpeza();
@@ -216,7 +224,7 @@ $('form-servico').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.di
 $('limpar-servico').onclick=()=>{$('form-servico').reset();$('form-servico').elements.id.value='';$('titulo-editor').textContent='Adicionar serviço';};
 $('form-expediente').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const novos=expediente.map(d=>({id:d.id,aberto:f.elements['aberto-'+d.id].checked,inicio:f.elements['inicio-'+d.id].value,fim:f.elements['fim-'+d.id].value,...(intervalosProntos?{intervalo_inicio:f.elements['intervalo_inicio-'+d.id].value||null,intervalo_fim:f.elements['intervalo_fim-'+d.id].value||null}:{})}));if(novos.some(d=>d.aberto&&d.fim<=d.inicio))throw new Error('O fechamento deve ser depois da abertura.');if(novos.some(d=>(Boolean(d.intervalo_inicio)!==Boolean(d.intervalo_fim))||(d.intervalo_inicio&&(d.intervalo_inicio<d.inicio||d.intervalo_fim>d.fim||d.intervalo_fim<=d.intervalo_inicio))))throw new Error('Preencha as duas horas do intervalo, dentro do expediente e em ordem.');if(!demo)await api('/rest/v1/rpc/saas_salvar_expediente','POST',{loja:lojaAtual.id,dias:novos});expediente=novos;aviso(demo?'Expediente alterado apenas na demonstração.':'Expediente salvo.');}catch(err){aviso(err.message);}finally{b.disabled=false;}};
 $('form-bloqueio').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const f=e.target;const dados={data:f.data.value,horario:f.horario.value||null,motivo:f.motivo.value};await salvar('bloqueios',null,dados);if(demo)bloqueios.push({...dados,id:crypto.randomUUID()});f.reset();await carregar();}catch(err){aviso(err.message);}finally{b.disabled=false;}};
-$('atualizar').onclick=()=>renderAgenda().catch(e=>aviso(e.message));$('filtro-data').onchange=$('atualizar').onclick;
+$('atualizar').onclick=()=>{if(window.RotinaPainel)RotinaPainel.offsetAgenda=0;return renderAgenda().catch(e=>aviso(e.message));};$('filtro-data').onchange=$('atualizar').onclick;
 const hoje=new Date();$('filtro-data').value=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
 if(!config.publicKey)aviso('Painel em preparação. Você já pode explorar a demonstração.');
 

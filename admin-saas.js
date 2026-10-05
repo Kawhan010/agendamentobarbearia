@@ -56,6 +56,7 @@ submitSeguro('form-configuracoes',async f=>{
 });
 async function carregarProfissionais(){
   const pessoas=await api('/rest/v1/saas_profissionais?select=*&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id+'&order=nome');
+  if(window.RotinaPainel)RotinaPainel.profissionais=pessoas;
   $('lista-profissionais').replaceChildren();
   for(const p of pessoas){
     const excluir=acao('Excluir profissional',()=>excluirProfissional(p));excluir.classList.add('perigo');
