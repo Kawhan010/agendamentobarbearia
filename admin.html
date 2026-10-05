@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="wk.css?v=20261003-logo">
   <link rel="stylesheet" href="fotos-profissionais.css?v=20261003-fotos">
   <link rel="stylesheet" href="contato-rodape.css?v=20261003-contato">
-  <link rel="stylesheet" href="admin-rotina.css?v=20261004-rotina">
+  <link rel="stylesheet" href="admin-rotina.css?v=20261005-concluir">
   <script src="tema.js?v=20261003-cores" defer></script>
   <script src="supabase-config.js" defer></script>
   <script src="saas.js?v=20261004-duracoes" defer></script>
@@ -20,7 +20,7 @@
   <script src="admin-financeiro.js?v=20261004-resumo-compacto" defer></script>
   <script src="admin.js?v=20261004-rotina" defer></script>
   <script src="admin-saas.js?v=20261004-rotina" defer></script>
-  <script src="admin-rotina.js?v=20261004-rotina" defer></script>
+  <script src="admin-rotina.js?v=20261005-concluir" defer></script>
 </head>
 <body>
   <header class="admin-topo"><a href="index.html" aria-label="WK Agendamento — início"><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="56" height="56"></a><div><small>AGENDA BARBEARIA</small><h1>Painel do barbeiro</h1></div><button id="sair" hidden>Sair</button></header>
@@ -71,6 +71,11 @@
       <dialog id="dialog-agendamento" class="dialog-rotina" aria-labelledby="titulo-agendamento">
         <div class="dialog-titulo"><h2 id="titulo-agendamento">Novo agendamento</h2><button type="button" data-fechar="dialog-agendamento" aria-label="Fechar novo agendamento">Fechar</button></div>
         <form id="form-agendamento-painel"><fieldset><label>Nome do cliente<input name="cliente" maxlength="100" required autocomplete="name"></label><label>Telefone com DDD<input name="telefone" inputmode="tel" maxlength="20" required autocomplete="tel"></label><div class="dupla"><label>Profissional<select name="profissional" required></select></label><label>Serviço<select name="servico" required></select></label></div><div class="dupla"><label>Data<input name="data" type="date" required></label><label>Horário disponível<select name="horario" required></select></label></div><p id="aviso-vagas" class="aviso-form" role="status"></p><p class="ajuda-rotina">Para registrar um encaixe de hoje, você também pode escolher um horário que já começou. As vagas respeitam o expediente, os intervalos e o tempo do profissional.</p><button type="submit" class="primario">Salvar agendamento</button></fieldset></form>
+      </dialog>
+
+      <dialog id="dialog-finalizar" class="dialog-rotina" aria-labelledby="titulo-finalizar" aria-describedby="resumo-finalizar orientacao-finalizar">
+        <div class="dialog-titulo"><h2 id="titulo-finalizar">Concluir atendimento</h2><button type="button" data-fechar="dialog-finalizar">Fechar</button></div>
+        <form id="form-finalizar"><fieldset><p id="resumo-finalizar"></p><p id="orientacao-finalizar"></p><p id="aviso-finalizar" class="aviso-form" role="alert"></p><button type="submit" class="primario">Confirmar conclusão</button></fieldset></form>
       </dialog>
 
       <dialog id="dialog-pagamento" class="dialog-rotina" aria-labelledby="titulo-pagamento">

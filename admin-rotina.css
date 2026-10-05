@@ -20,6 +20,7 @@
 .caixa-colunas{margin:16px 0 32px}
 .admin-main .filtro-espera{max-width:320px;margin:16px 0 24px}
 .situacao-reserva{display:inline-block;padding:4px 8px;border:1px solid var(--borda-suave,#ddd);border-radius:4px;font-size:.75rem;margin-top:4px}
+.linha-item p.ajuda-finalizacao{font-size:.8rem;line-height:1.5;max-width:50ch;margin-top:12px}
 .acoes-reserva{justify-content:flex-end;max-width:560px}
 .mais-acoes{width:100%;text-align:right}
 .mais-acoes summary{cursor:pointer;padding:12px;color:var(--link-tema,var(--azul));font-size:.85rem;min-height:44px}

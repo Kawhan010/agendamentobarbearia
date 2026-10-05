@@ -6,10 +6,16 @@ window.RotinaPainel = (() => {
   const limite = 20;
   const offsets = {clientes:0,historico:0,despesas:0,recebimentos:0,espera:0};
   const versoes = {};
-  let ocupado=false, agendamento=null, pagamentoAtual=null, clienteAtual=null, esperaId=null, despesaId=null, vagasProntas=false;
+  let ocupado=false, agendamento=null, finalizacao=null, pagamentoAtual=null, clienteAtual=null, esperaId=null, despesaId=null, vagasProntas=false;
   let periodo=null;
   const hoje = () => new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());
   const dataBR = dia => dia ? dia.slice(0,10).split('-').reverse().join('/') : 'Sem data definida';
+  function horarioIniciado(r){
+    const partes=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+    const agora=Object.fromEntries(partes.map(p=>[p.type,p.value]));
+    return r.data+'T'+r.horario.slice(0,8)<=agora.year+'-'+agora.month+'-'+agora.day+'T'+agora.hour+':'+agora.minute+':'+agora.second;
+  }
+  const avisoHorario = r => 'Este atendimento está marcado para '+dataBR(r.data)+' às '+r.horario.slice(0,5)+'. Só é possível concluir ou registrar falta depois que esse horário começar.';
   const telefone = valor => {
     let n=String(valor||'').replace(/\D/g,'');
     if((n.length===12||n.length===13)&&n.startsWith('55'))n=n.slice(2);
@@ -60,7 +66,7 @@ window.RotinaPainel = (() => {
       $('sair').disabled=false;document.querySelectorAll('[data-fechar]').forEach(n=>n.disabled=false);
     }
   }
-  function submit(id,fn){const f=$(id);f.onsubmit=async e=>{e.preventDefault();try{await salvarFormulario(f,()=>fn(f));}catch(err){aviso(err.message);}};}
+  function submit(id,fn,erroId=null){const f=$(id);f.onsubmit=async e=>{e.preventDefault();try{await salvarFormulario(f,()=>fn(f));}catch(err){if(erroId)$(erroId).textContent=err.message;else aviso(err.message);}};}
   async function depoisDeSalvar(mensagem,dialog=null){
     if(dialog){const d=$(dialog);if(typeof d.close==='function')d.close();else d.removeAttribute('open');}
     const tarefas=[renderAgenda()];
@@ -105,16 +111,39 @@ window.RotinaPainel = (() => {
     const pessoa=r.saas_profissionais||modulo.profissionais.find(p=>p.id===r.profissional);
     if(pessoa)texto.append(el('p','Profissional: '+pessoa.nome));
     texto.append(el('span',estados[r.status]||r.status,'situacao-reserva'));
+    if(['pendente','confirmado'].includes(r.status)&&!horarioIniciado(r))texto.append(el('p',avisoHorario(r),'ajuda-finalizacao'));
     const p=recebido(r);if(p)texto.append(el('p','Pago: '+moeda(p.valor)+' • '+formas[p.forma]+' • '+dataBR(p.data)));
   }
   async function finalizar(r,estado){
     acesso();if(ocupado)return;
-    if(!window.confirm((estado==='faltou'?'Registrar que ':'Concluir o atendimento de ')+r.cliente+(estado==='faltou'?' faltou?':'?')))return;
-    await salvarFormulario($('form-agendamento-painel'),async()=>{
-      await rpc('saas_finalizar_atendimento',{reserva:r.id,estado});
-      await depoisDeSalvar(estado==='faltou'?'Falta registrada no histórico.':'Atendimento concluído. Registre o pagamento se ainda não recebeu.');
-    });
+    finalizacao={reserva:r,estado};
+    $('titulo-finalizar').textContent=estado==='faltou'?'Registrar falta':'Concluir atendimento';
+    $('resumo-finalizar').textContent=r.cliente+' • '+r.servico_nome+' • '+dataBR(r.data)+' às '+r.horario.slice(0,5);
+    $('orientacao-finalizar').textContent=estado==='faltou'?'A falta ficará registrada no histórico do cliente.':'Confirme quando o atendimento tiver terminado. O pagamento é registrado separadamente.';
+    const impedimento=!horarioIniciado(r)?avisoHorario(r):estado==='faltou'&&recebido(r)?'Este atendimento já possui pagamento registrado. Não é possível marcar falta.':'';
+    $('aviso-finalizar').textContent=impedimento;
+    const b=$('form-finalizar').querySelector('[type="submit"]');b.textContent=estado==='faltou'?'Confirmar falta':'Confirmar conclusão';b.disabled=Boolean(impedimento);
+    abrir('dialog-finalizar');
   }
+  submit('form-finalizar',async f=>{
+    if(!finalizacao)throw new Error('Selecione o atendimento novamente.');
+    const {reserva:r,estado}=finalizacao;
+    if(!horarioIniciado(r))throw new Error(avisoHorario(r));
+    $('aviso-finalizar').textContent='Salvando…';
+    const b=f.querySelector('[type="submit"]'),rotulo=b.textContent;b.textContent='Salvando…';
+    try{
+      let salva;
+      try{salva=await rpc('saas_finalizar_atendimento',{reserva:r.id,estado});}
+      catch(e){
+        const rows=await api('/rest/v1/reservas?select=id,status,barbearia_id&id=eq.'+r.id).catch(()=>[]);
+        salva=rows.find(s=>s.id===r.id&&s.status===estado&&s.barbearia_id===lojaAtual.id);
+        if(!salva)throw e;
+      }
+      if(salva?.id!==r.id||salva.status!==estado||salva.barbearia_id!==lojaAtual.id)throw new Error('Não foi possível confirmar a alteração. Atualize a agenda e tente novamente.');
+      finalizacao=null;
+      await depoisDeSalvar(estado==='faltou'?'Falta registrada no histórico.':'Atendimento concluído. Registre o pagamento se ainda não recebeu.','dialog-finalizar');
+    }finally{b.textContent=rotulo;}
+  },'aviso-finalizar');
   async function abrirAgendamento(r=null,espera=null){
     acesso();if(ocupado)return;
     const {itens,pessoas}=await catalogos();
@@ -320,7 +349,7 @@ window.RotinaPainel = (() => {
     for(const d of document.querySelectorAll('.dialog-rotina'))fechar(d.id);
     for(const id of ['lista-clientes','historico-cliente','totais-caixa','formas-caixa','lista-despesas','lista-recebimentos','lista-espera'])$(id).replaceChildren();
     for(const area of Object.keys(offsets))offsets[area]=0;modulo.offsetAgenda=0;modulo.profissionais=[];
-    agendamento=pagamentoAtual=clienteAtual=periodo=null;esperaId=despesaId=null;
+    agendamento=finalizacao=pagamentoAtual=clienteAtual=periodo=null;esperaId=despesaId=null;
     for(const id of ['form-cliente','form-agendamento-painel','form-pagamento','form-espera','form-despesa'])$(id).reset();
   });
   const f=$('filtro-caixa');f.elements.inicio.value=f.elements.fim.value=hoje();

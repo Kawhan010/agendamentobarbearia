@@ -7,7 +7,7 @@ const servico={id:'20000000-0000-4000-8000-000000000001',nome:'Corte',preco:30,c
 const dia=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());
 const resposta=(data,ok=true)=>({ok,status:ok?200:500,json:async()=>structuredClone(data)});
 const reservas=[],pagamentos=[],despesas=[],clientes=[],esperas=[],requests=[];
-let perderCriacao=false,perderDespesa=false,erroCaixa=false,caixaMalformado=false,segurarVagas=null;
+let perderCriacao=false,perderDespesa=false,erroCaixa=false,caixaMalformado=false,segurarVagas=null,erroFinalizar=false,perderFinalizacao=false,segurarFinalizacao=null;
 const reserva=(id,nome='Cliente',status='confirmado')=>({id,barbearia_id:loja.id,cliente:nome,telefone:'79922222222',servico_id:servico.id,servico_nome:'Corte',preco:30,profissional:profissional.id,data:dia,horario:'00:00:00',duracao_minutos:20,status,atualizado_em:'2026-10-04T00:00:00Z'});
 function filtrar(rows,url){
  return rows.filter(r=>[...url.searchParams].every(([k,v])=>v.startsWith('eq.')?String(r[k])===v.slice(3):v.startsWith('gte.')?String(r[k])>=v.slice(4):v.startsWith('lte.')?String(r[k])<=v.slice(4):v.startsWith('in.')?v.slice(4,-1).split(',').includes(r[k]):true));
@@ -18,6 +18,8 @@ function perfil(r){if(!clientes.some(c=>c.telefone===r.telefone))clientes.push({
 reservas.push(reserva('30000000-0000-4000-8000-000000000001','José <img src=x>','pendente'));perfil(reservas[0]);
 (async()=>{
  const dom=new JSDOM(fs.readFileSync('admin.html','utf8'),{url:'https://teste.local/admin.html',runScripts:'outside-only'}),w=dom.window,d=w.document;
+ const DataOriginal=w.Date,agoraTeste=Date.parse(dia+'T12:00:00-03:00');
+ w.Date=class extends DataOriginal{constructor(...args){super(...(args.length?args:[agoraTeste]));}static now(){return agoraTeste;}};
  for(const f of d.forms)for(const input of f.elements)if(input.name&&input.name!=='id')Object.defineProperty(f,input.name,{get:()=>f.elements.namedItem(input.name),configurable:true});
  w.crypto.randomUUID=require('node:crypto').randomUUID;w.confirm=()=>true;let aberturas=0;w.open=()=>{aberturas++;return null;};
  w.fetch=async(raw,options={})=>{
@@ -34,7 +36,12 @@ reservas.push(reserva('30000000-0000-4000-8000-000000000001','José <img src=x>'
     if(body.espera){const e=esperas.find(e=>e.id===body.espera);e.status='agendado';e.reserva_id=r.id;}
     if(perderCriacao){perderCriacao=false;throw new Error('Resposta perdida');}return resposta(r);
    }
-   if(t==='saas_finalizar_atendimento'){const r=reservas.find(r=>r.id===body.reserva);r.status=body.estado;return resposta(r);}
+   if(t==='saas_finalizar_atendimento'){
+    if(erroFinalizar)return resposta({message:'Não foi possível salvar o atendimento'},false);
+    if(segurarFinalizacao){const espera=segurarFinalizacao;segurarFinalizacao=null;await espera;}
+    const r=reservas.find(r=>r.id===body.reserva);r.status=body.estado;
+    if(perderFinalizacao){perderFinalizacao=false;throw new Error('Resposta perdida');}return resposta(r);
+   }
    if(t==='saas_registrar_pagamento'){
     let p=pagamentos.find(p=>p.reserva_id===body.reserva);if(!p){p={id:w.crypto.randomUUID(),barbearia_id:loja.id,reserva_id:body.reserva};pagamentos.push(p);}
     Object.assign(p,{valor:body.valor_recebido,forma:body.forma_pagamento,data:body.dia});return resposta(p);
@@ -83,7 +90,25 @@ reservas.push(reserva('30000000-0000-4000-8000-000000000001','José <img src=x>'
  assert.equal(form('painel').hidden,false);assert.equal(form('lista-agenda').querySelector('img'),null);
  const lembrete=form('lista-agenda').querySelector('a.acao-whatsapp'),link=new URL(lembrete.href);
  assert.equal(link.searchParams.get('phone'),'5579922222222');assert.ok(link.searchParams.get('text').includes('00:00'));assert.equal(aberturas,0);
- await botao('Confirmar').onclick();await botao('Concluir atendimento').onclick();assert.equal(reservas[0].status,'concluido');assert.equal(botao('Remarcar'),undefined);
+ await botao('Confirmar').onclick();
+ // Horário futuro fica explicado no cartão e na confirmação, sem gravar no banco.
+ reservas[0].horario='23:59:00';await form('atualizar').onclick();assert.ok(form('lista-agenda').textContent.includes('Só é possível concluir'));
+ w.confirm=()=>{throw new Error('A finalização não deve depender do diálogo nativo');};
+ await botao('Concluir atendimento').onclick();assert.equal(form('dialog-finalizar').hasAttribute('open'),true);
+ assert.equal(form('form-finalizar').querySelector('[type="submit"]').disabled,true);assert.ok(form('aviso-finalizar').textContent.includes('23:59'));
+ const finais=()=>requests.filter(r=>r.url.includes('/saas_finalizar_atendimento'));
+ const antes=finais().length;await submit('form-finalizar');assert.equal(finais().length,antes);
+ assert.equal(reservas[0].status,'confirmado');d.querySelector('[data-fechar="dialog-finalizar"]').click();
+ reservas[0].horario='00:00:00';await form('atualizar').onclick();
+ await botao('Concluir atendimento').onclick();assert.equal(reservas[0].status,'confirmado');assert.equal(form('form-finalizar').querySelector('[type="submit"]').disabled,false);
+ assert.equal(form('dialog-finalizar').querySelector('img'),null);d.querySelector('[data-fechar="dialog-finalizar"]').click();assert.equal(reservas[0].status,'confirmado');
+ await botao('Concluir atendimento').onclick();erroFinalizar=true;await submit('form-finalizar');
+ assert.ok(form('aviso-finalizar').textContent.includes('Não foi possível salvar'));assert.equal(form('dialog-finalizar').hasAttribute('open'),true);assert.equal(reservas[0].status,'confirmado');erroFinalizar=false;
+ let liberarFinalizacao;segurarFinalizacao=new Promise(resolve=>{liberarFinalizacao=resolve;});perderFinalizacao=true;
+ const gravacao=submit('form-finalizar');await tick();assert.equal(form('form-finalizar').querySelector('fieldset').disabled,true);assert.equal(form('sair').disabled,true);
+ const enviados=finais().length;await submit('form-finalizar');assert.equal(finais().length,enviados);
+ liberarFinalizacao();await gravacao;assert.equal(reservas[0].status,'concluido');assert.equal(botao('Remarcar'),undefined);assert.equal(form('dialog-finalizar').hasAttribute('open'),false);
+ assert.ok(form('lista-agenda').textContent.includes('Concluído'));assert.equal(form('sair').disabled,false);w.confirm=()=>true;
  await botao('Registrar pagamento').onclick();const f=form('form-pagamento');f.elements.valor.value='35.50';f.elements.forma.value='pix';await submit('form-pagamento');
  assert.equal(pagamentos.length,1);assert.equal(pagamentos[0].valor,35.5);assert.ok(form('lista-agenda').textContent.includes('Pago:'));assert.equal(form('limpar-agendamentos').disabled,true);
  await botao('Editar pagamento').onclick();f.elements.valor.value='40';f.elements.forma.value='dinheiro';await submit('form-pagamento');assert.equal(pagamentos.length,1);assert.equal(pagamentos[0].valor,40);
@@ -92,7 +117,7 @@ reservas.push(reserva('30000000-0000-4000-8000-000000000001','José <img src=x>'
  let liberar;segurarVagas=new Promise(resolve=>{liberar=resolve;});const consulta=ag.elements.profissional.onchange();await tick();assert.equal(ag.querySelector('[type="submit"]').disabled,true);liberar();await consulta;
  ag.elements.horario.value='00:20';perderCriacao=true;await submit('form-agendamento-painel');assert.equal(reservas.length,2);assert.equal(reservas[1].telefone,'79933333333');
  await botao('Remarcar').onclick();ag.elements.horario.value='00:40';await submit('form-agendamento-painel');assert.equal(reservas.length,2);assert.equal(reservas[1].horario,'00:40:00');
- await botao('Cliente faltou').onclick();assert.equal(reservas[1].status,'faltou');
+ await botao('Cliente faltou').onclick();assert.equal(reservas[1].status,'confirmado');await submit('form-finalizar');assert.equal(reservas[1].status,'faltou');
  await area('clientes');assert.equal(form('lista-clientes').children.length,2);await botao('Ver histórico','lista-clientes').onclick();assert.ok(form('historico-cliente').textContent.includes('Recebido'));
  form('form-cliente').elements.observacoes.value='Degradê baixo, máquina 1';await submit('form-cliente');assert.equal(clientes[0].observacoes,'Degradê baixo, máquina 1');form('dialog-cliente').removeAttribute('open');
  await area('caixa');assert.ok(form('totais-caixa').textContent.includes('40,00'));const desp=form('form-despesa');desp.elements.descricao.value='Lâminas';desp.elements.valor.value='10';perderDespesa=true;await submit('form-despesa');assert.equal(despesas.length,1);assert.ok(form('totais-caixa').textContent.includes('30,00'));
