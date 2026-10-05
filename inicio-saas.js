@@ -16,7 +16,7 @@ async function iniciar() {
       a.href = 'agendamento.html?' + new URLSearchParams({ barbearia: SaaS.loja.slug, cabeleireiro: p.id });
       const info = document.createElement('span'); info.className = 'profissional-info';
       const nome = document.createElement('strong'); nome.textContent = p.nome;
-      const descricao = document.createElement('span'); descricao.textContent = p.id === 'sem-preferencia' ? 'Qualquer profissional disponível' : 'Cabeleireiro';
+      const descricao = document.createElement('span'); descricao.textContent = p.id === 'sem-preferencia' ? 'Qualquer profissional disponível' : 'Barbeiro';
       info.append(nome, descricao); a.append(FotosProfissionais.avatar(p), info); grade.append(a);
     }
   } catch (e) { document.getElementById('instrucao-profissionais').textContent = e.message; }
