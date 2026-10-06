@@ -13,6 +13,7 @@ const mudarDia = document.getElementById('mudar-dia');
 const tituloHorarios = document.getElementById('titulo-horarios');
 const hoje = new Date();
 const remotos = new Map();
+if(!parametros.get('servico_id')){statusHorario.textContent='Volte aos serviços e escolha seu atendimento.';return;}
 if(!AgendaDB.ativa){statusHorario.textContent='O agendamento ainda não foi configurado. Entre em contato com a barbearia.';return;}
 if(AgendaDB.ativa){
  statusHorario.textContent='Consultando a agenda…';
@@ -20,9 +21,9 @@ if(AgendaDB.ativa){
   await Promise.all(Array.from({length:15},async(_,i)=>{
    const d=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate()+i,12);
    const iso=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
-   remotos.set(iso,await AgendaDB.horarios(iso,parametros.get('cabeleireiro')||'sem-preferencia'));
+   remotos.set(iso,await AgendaDB.horarios(iso,parametros.get('cabeleireiro')||'sem-preferencia',parametros.get('servico_id')));
   }));
-  document.querySelector('#etapa-horarios > p').textContent='Os horários seguem o tempo de atendimento de cada profissional. A disponibilidade será verificada novamente ao solicitar.';
+  document.querySelector('#etapa-horarios > p').textContent='Os horários seguem o tempo do serviço escolhido. A disponibilidade será verificada novamente ao solicitar.';
   statusHorario.textContent='Selecione uma data.';
  }catch(e){statusHorario.textContent=e.message;return;}
 }

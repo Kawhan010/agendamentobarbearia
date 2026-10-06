@@ -11,5 +11,5 @@ window.AgendaDB = {
     if(!r.ok)throw new Error(result?.message==='Expediente pausado'?'A barbearia pausou os agendamentos. Tente novamente quando o expediente for retomado.':result?.message==='Horário indisponível'?'Este horário não está mais disponível. Escolha outro horário.':'Não foi possível consultar ou salvar na agenda. Tente novamente.');
     return result;
   },
-  horarios(data, profissional) {return this.request('rpc/horarios_livres',{dia:data,barbeiro:profissional});}
+  horarios(data, profissional, servico) {return this.request('rpc/horarios_livres',{dia:data,barbeiro:profissional,servico});}
 };

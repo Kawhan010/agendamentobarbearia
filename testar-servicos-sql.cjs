@@ -1,0 +1,78 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {PGlite}=require(path.join(process.argv[2],'node_modules/@electric-sql/pglite'));
+(async()=>{
+ const db=new PGlite();
+ await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ grant usage on schema auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
+ for(const f of ['supabase-saas.sql','supabase-exclusoes.sql','supabase-duracao-profissionais.sql','supabase/migrations/20261004171711_rotina_barbeiro.sql'])await db.exec(fs.readFileSync(f,'utf8'));
+ await db.exec(`create schema storage;grant usage on schema storage to anon,authenticated;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid default gen_random_uuid(),bucket_id text references storage.buckets(id),name text not null);
+ create function storage.foldername(name text) returns text[] language sql immutable as $$select (string_to_array(name,'/'))[1:1]$$;
+ alter table storage.objects enable row level security;grant select,insert,delete on storage.objects to anon,authenticated;`);
+ const a=crypto.randomUUID(),b=crypto.randomUUID();await db.query('insert into auth.users values($1),($2)',[a,b]);
+ async function conta(id){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated');}
+ async function criar(user,slug){await conta(user);const loja=(await db.query("select saas_criar_barbearia($1,$1,'5579999999999') id",[slug])).rows[0].id;
+  const prof=(await db.query('update saas_profissionais set duracao_minutos=30 where barbearia_id=$1 returning id',[loja])).rows[0].id;
+  const servico=(await db.query("insert into saas_servicos(barbearia_id,nome,preco,categoria,imagem) values($1,'Corte',30,'individual','assets/corte.jpg') returning id",[loja])).rows[0].id;
+  await db.query("update saas_expediente set aberto=true,inicio='09:00',fim='12:00' where barbearia_id=$1",[loja]);return {loja,prof,servico};}
+ const A=await criar(a,'servicos-a'),B=await criar(b,'servicos-b');
+ await db.exec('reset role');const dia=(await db.query("select ((now() at time zone 'America/Sao_Paulo')::date+1)::text dia")).rows[0].dia;
+ await db.exec('set role anon');const antiga=(await db.query("select saas_reservar($1,$2,'09:00',$3,$4,'Antigo','79911111111') r",[A.loja,dia,A.prof,A.servico])).rows[0].r;
+ await db.exec('reset role');await db.exec(fs.readFileSync('supabase/migrations/20261006153818_servicos_tempo_imagem.sql','utf8'));
+ assert.equal((await db.query('select duracao_minutos,imagem,imagem_arquivo from saas_servicos where id=$1',[A.servico])).rows[0].duracao_minutos,30);
+ assert.equal((await db.query('select duracao_minutos from saas_reservas where id=$1',[antiga.id])).rows[0].duracao_minutos,30);
+ await conta(a);await db.query('update saas_servicos set duracao_minutos=25 where id=$1',[A.servico]);
+ const combo=(await db.query("insert into saas_servicos(barbearia_id,nome,preco,categoria,duracao_minutos) values($1,'Combo',70,'combo',60) returning id",[A.loja])).rows[0].id;
+ const semTempo=(await db.query("insert into saas_profissionais(barbearia_id,nome) values($1,'Barbeiro novo') returning id",[A.loja])).rows[0].id;
+ for(const v of [0,1441,25.5])await assert.rejects(()=>db.query('update saas_servicos set duracao_minutos=$1 where id=$2',[v,A.servico]));
+ assert.equal((await db.query('update saas_servicos set duracao_minutos=10 where id=$1 returning id',[B.servico])).rows.length,0);
+ async function publico(){await db.exec('reset role;set role anon');}
+ async function livres(item,prof=A.prof,loja=A.loja,data=dia){return (await db.query('select * from saas_horarios_livres($1,$2,$3,$4)',[loja,data,prof,item])).rows.map(r=>r.horario);}
+ async function reservar(item,hora,prof=A.prof){return (await db.query('select saas_reservar($1,$2,$3,$4,$5,$6,$7) r',[A.loja,dia,hora,prof,item,'Cliente','79922222222'])).rows[0].r;}
+ await publico();
+ assert.deepEqual(await livres(A.servico),['09:50','10:15','10:40','11:05','11:30']);
+ assert.deepEqual(await livres(combo),['10:00','11:00']);
+ assert.ok((await livres(A.servico,semTempo)).includes('09:00'),'Novo profissional usa tempo do serviço');
+ assert.deepEqual(await livres(B.servico),[]);assert.deepEqual(await livres(A.servico,B.prof),[]);
+ assert.ok((await db.query('select * from saas_horarios_livres($1,$2,$3)',[A.loja,dia,A.prof])).rows.length,'Compatibilidade com chamada antiga');
+ const nova=await reservar(combo,'10:00');assert.equal(nova.duracao_minutos,60);
+ await assert.rejects(()=>reservar(A.servico,'10:40'));await assert.rejects(()=>reservar(combo,'10:00'));
+ assert.deepEqual(await livres(A.servico),['09:50','11:05','11:30'].filter(h=>h!=='09:50'),'O corte não pode invadir o combo');
+ const qualquer=await reservar(A.servico,'09:00','sem-preferencia');assert.equal(qualquer.profissional,semTempo);assert.equal(qualquer.duracao_minutos,25);
+ await conta(a);await db.query('update saas_servicos set duracao_minutos=35 where id=$1',[A.servico]);
+ assert.equal((await db.query('select duracao_minutos from saas_reservas where id=$1',[qualquer.id])).rows[0].duracao_minutos,25);
+ const dataNova=(await db.query("select ($1::date+1)::text dia",[dia])).rows[0].dia;
+ const painel=async(item,hora,reserva=null,prof=A.prof)=>(await db.query('select saas_agendar_painel($1,$2,$3,$4,$5,$6,$7,$8) r',[A.loja,dataNova,hora,prof,item,'Painel','79933333333',reserva])).rows[0].r;
+ const r=await painel(A.servico,'09:00');assert.equal(r.duracao_minutos,35);
+ await db.query('update saas_servicos set duracao_minutos=20 where id=$1',[A.servico]);
+ const remarcada=await painel(A.servico,'09:35',r.id,semTempo);assert.equal(remarcada.duracao_minutos,35,'Mantém tempo ao mudar apenas barbeiro/data');
+ const trocada=await painel(combo,'10:00',r.id,semTempo);assert.equal(trocada.duracao_minutos,60,'Trocar o serviço usa seu novo tempo');
+ await assert.rejects(()=>painel(A.servico,'10:20',null,semTempo));
+ await db.query("update saas_expediente set intervalo_inicio='10:00',intervalo_fim='10:30',fim='11:20' where barbearia_id=$1",[A.loja]);
+ await publico();assert.deepEqual(await livres(combo,A.prof,A.loja,dataNova),['09:00']);
+ await conta(a);await db.query("insert into saas_bloqueios(barbearia_id,data,horario) values($1,$2,'09:25')",[A.loja,dataNova]);
+ await publico();assert.deepEqual(await livres(combo,A.prof,A.loja,dataNova),[]);
+ await assert.rejects(()=>db.query('select * from saas_horarios_painel($1,$2,$3,null,$4)',[A.loja,dia,A.prof,A.servico]));
+ await conta(b);await assert.rejects(()=>db.query('select * from saas_horarios_painel($1,$2,$3,null,$4)',[A.loja,dia,A.prof,A.servico]));
+ const fa=A.loja+'/'+crypto.randomUUID()+'.webp',fb=B.loja+'/'+crypto.randomUUID()+'.jpg';
+ await db.query("insert into storage.objects(bucket_id,name) values('imagens-servicos',$1)",[fb]);
+ await db.query('update saas_servicos set imagem_arquivo=$1 where id=$2',[fb,B.servico]);
+ assert.equal((await db.query('delete from storage.objects where name=$1 returning id',[fb])).rows.length,0);
+ await conta(a);await assert.rejects(()=>db.query("insert into storage.objects(bucket_id,name) values('imagens-servicos',$1)",[fb]));
+ await assert.rejects(()=>db.query('update saas_servicos set imagem_arquivo=$1 where id=$2',[fb,A.servico]));
+ await db.query("insert into storage.objects(bucket_id,name) values('imagens-servicos',$1)",[fa]);
+ await db.query('update saas_servicos set imagem_arquivo=$1 where id=$2',[fa,A.servico]);
+ assert.equal((await db.query('delete from storage.objects where name=$1 returning id',[fa])).rows.length,0);
+ await publico();assert.equal((await db.query('select imagem_arquivo,duracao_minutos from saas_servicos where id=$1',[A.servico])).rows[0].imagem_arquivo,fa);
+ await assert.rejects(()=>db.query('update saas_servicos set duracao_minutos=10 where id=$1',[A.servico]));
+ await assert.rejects(()=>db.query("insert into storage.objects(bucket_id,name) values('imagens-servicos',$1)",[fa]));
+ await conta(a);await db.query("update saas_servicos set imagem_arquivo='' where id=$1",[A.servico]);
+ assert.equal((await db.query('delete from storage.objects where name=$1 returning id',[fa])).rows.length,1);
+ await db.query('update saas_controle_agenda set pausado=true where barbearia_id=$1',[A.loja]);await publico();assert.deepEqual(await livres(combo),[]);
+ await assert.rejects(()=>reservar(combo,'11:00'));
+ await db.exec('reset role');const bucket=(await db.query("select * from storage.buckets where id='imagens-servicos'")).rows[0];
+ assert.equal(bucket.public,true);assert.equal(Number(bucket.file_size_limit),2097152);assert.deepEqual(bucket.allowed_mime_types,['image/jpeg','image/webp']);
+ await db.close();console.log('OK: tempos por serviço, reservas antigas, conflitos, painel/remarcação, novo profissional, intervalos, fechamento, bloqueios, pausa, compatibilidade, RLS e imagens protegidas.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -50,7 +50,7 @@ window.RotinaPainel = (() => {
     acesso();const sessao=contexto();
     const [itens,pessoas]=await Promise.all([
       api('/rest/v1/saas_servicos?select=*&ativo=eq.true&barbearia_id=eq.'+lojaAtual.id+'&order=nome'),
-      api('/rest/v1/saas_profissionais?select=*&ativo=eq.true&excluido=eq.false&duracao_minutos=not.is.null&barbearia_id=eq.'+lojaAtual.id+'&order=nome'),
+      api('/rest/v1/saas_profissionais?select=*&ativo=eq.true&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id+'&order=nome'),
     ]);
     if(contexto()!==sessao)throw new Error('A sessão mudou. Entre novamente.');
     return {itens,pessoas};
@@ -155,18 +155,18 @@ window.RotinaPainel = (() => {
     preencher(f.elements.profissional,pessoas,'Escolha o profissional',inicial.profissional||'');
     preencher(f.elements.servico,itens,'Escolha o serviço',inicial.servico_id||'');
     f.elements.data.min=hoje();f.elements.data.value=inicial.data&&inicial.data>=hoje()?inicial.data:($('filtro-data').value>=hoje()?$('filtro-data').value:hoje());
-    f.elements.horario.replaceChildren(el('option','Escolha o profissional e a data'));f.elements.horario.firstElementChild.value='';
-    $('aviso-vagas').textContent=itens.length&&pessoas.length?'':'Cadastre um serviço e um profissional com tempo de atendimento para agendar.';
+    f.elements.horario.replaceChildren(el('option','Escolha o profissional, o serviço e a data'));f.elements.horario.firstElementChild.value='';
+    $('aviso-vagas').textContent=itens.length&&pessoas.length?'':'Cadastre um serviço e um profissional ativo para agendar.';
     vagasProntas=false;abrir('dialog-agendamento');await carregarVagas(r?.horario?.slice(0,5)||'');
   }
   async function carregarVagas(preferido=''){
     const f=$('form-agendamento-painel'),selecionado=f.elements.horario;
     const atual=consulta('vagas');vagasProntas=false;selecionado.disabled=true;selecionado.replaceChildren();
     const b=f.querySelector('button[type="submit"]');b.disabled=true;
-    if(!f.elements.profissional.value||!f.elements.data.value){selecionado.append(el('option','Escolha o profissional e a data'));return;}
+    if(!f.elements.profissional.value||!f.elements.data.value||!f.elements.servico.value){const msg='Escolha o profissional, o serviço e a data';selecionado.append(el('option',msg));$('aviso-vagas').textContent=msg;return;}
     $('aviso-vagas').textContent='Consultando horários…';
     try{
-      const horarios=await rpc('saas_horarios_painel',{dia:f.elements.data.value,barbeiro:f.elements.profissional.value,reserva:agendamento?.reserva?.id||null});
+      const horarios=await rpc('saas_horarios_painel',{dia:f.elements.data.value,barbeiro:f.elements.profissional.value,reserva:agendamento?.reserva?.id||null,servico:f.elements.servico.value});
       if(!atual())return;
       preencher(selecionado,horarios.map(h=>({id:h.horario,nome:h.horario})),'Escolha um horário',preferido);
       selecionado.disabled=!horarios.length;vagasProntas=horarios.length>0;b.disabled=!vagasProntas;
@@ -187,7 +187,7 @@ window.RotinaPainel = (() => {
     $('filtro-data').value=dados.dia;modulo.offsetAgenda=0;
     await depoisDeSalvar(dados.reserva?'Agendamento remarcado.':'Agendamento salvo e confirmado no site.','dialog-agendamento');
   });
-  for(const nome of ['profissional','data'])$('form-agendamento-painel').elements[nome].onchange=()=>carregarVagas();
+  for(const nome of ['profissional','servico','data'])$('form-agendamento-painel').elements[nome].onchange=()=>carregarVagas();
   function abrirPagamento(r){
     acesso();pagamentoAtual=r;const p=recebido(r),f=$('form-pagamento');
     $('titulo-pagamento').textContent=p?'Corrigir pagamento':'Registrar pagamento';

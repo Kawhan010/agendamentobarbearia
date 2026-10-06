@@ -39,8 +39,8 @@ async function iniciarCatalogo(){
   const itens=await AgendaDB.request('servicos?select=*&ativo=eq.true&order=preco');
   for(const s of itens){
    const b=document.createElement('button');b.type='button';b.className='servico'+(s.categoria==='combo'?' combo':'');b.dataset.id=s.id;b.dataset.servico=s.nome;
-   if(/^(assets\/|https:\/\/)/.test(s.imagem)){const img=document.createElement('img');img.src=s.imagem;img.alt='';img.className='imagem-servico';b.append(img);}
-   const n=document.createElement('strong');n.textContent=s.nome;const p=document.createElement('span');p.className='preco-servico';p.textContent=Number(s.preco).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const d=document.createElement('span');d.textContent=s.descricao;b.append(n,p,d);grades[s.categoria==='combo'?1:0].append(b);
+   const img=ImagensServicos.imagem(s);if(img)b.append(img);
+   const n=document.createElement('strong');n.textContent=s.nome;const p=document.createElement('span');p.className='preco-servico';p.textContent=Number(s.preco).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const d=document.createElement('span');d.textContent=s.descricao;const tempo=document.createElement('span');tempo.textContent=(s.duracao_minutos??40)+' minutos';b.append(n,p,tempo,d);grades[s.categoria==='combo'?1:0].append(b);
   }
   grades.forEach(g=>{if(!g.children.length)g.textContent='Nenhum serviço disponível nesta categoria.';});conectarCartoes();
  }catch(e){grades[0].textContent=e.message;}
