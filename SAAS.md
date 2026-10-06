@@ -34,6 +34,16 @@ Execute `supabase-personalizacao.sql` após a instalação SaaS. A atualização
 
 As cores são salvas no banco, sem depender do navegador do barbeiro. Os tons de texto, superfícies e foco são derivados automaticamente para manter a leitura. Descartar prévia recupera as cores salvas; Restaurar padrão ainda exige Salvar cores. A demonstração não salva alterações.
 
+## Imagem de fundo
+
+A migração `supabase/migrations/20261006001151_fundo_barbearia.sql` adiciona o fundo personalizado e o bucket público `fundos-barbearias`. Já foi aplicada ao projeto conectado. Em **Personalização → Imagem de fundo**, escolha um arquivo JPG, PNG ou WebP de até 5 MB, confira a prévia e clique em **Salvar imagem de fundo**. **Remover imagem** também exige salvar; **Descartar prévia** recupera a imagem salva. A escolha é independente das cores e vale para o painel e as quatro páginas públicas do agendamento.
+
+O navegador ajusta a imagem para no máximo 1920 pixels no maior lado e a comprime para WebP, com JPG como alternativa. O arquivo publicado tem limite de 2 MB. O fundo cobre a tela; as áreas de texto usam as superfícies da paleta para preservar a leitura. A imagem é pública, e apenas o dono pode enviar arquivos na pasta da sua barbearia e alterar seu fundo.
+
+Cada envio usa um caminho novo. Trocas e remoções salvas tentam limpar a imagem anterior; as regras do banco impedem excluir o arquivo que ainda está em uso. Se não for possível conferir o estado após uma falha de conexão, o arquivo é preservado. Uma edição concorrente da imagem exige atualizar o painel antes de salvar novamente.
+
+Execute `node testar-fundo-sql.cjs CAMINHO_DAS_DEPENDENCIAS` e `node testar-fundo-interface.cjs CAMINHO_DAS_DEPENDENCIAS` com PGlite e jsdom na pasta indicada. Os testes cobrem permissões entre barbearias, formatos e tamanho, prévia, compressão, descarte, troca, remoção, falhas de envio, resposta perdida, edição concorrente e preservação das cores. Usam dados isolados e API simulada.
+
 ## Fotos dos profissionais
 
 Execute `supabase-fotos-profissionais.sql` após a instalação SaaS. No banco compartilhado em uso, esta atualização foi aplicada em 3 de outubro de 2026. Ela adiciona o caminho da foto ao cadastro e cria o bucket público `fotos-profissionais`, com limite de 5 MB e formatos JPG, PNG e WebP. Cada dono só pode enviar e excluir arquivos na pasta da sua barbearia. As imagens podem ser vistas pelos clientes pela URL pública; cadastros inativos continuam ocultos da lista pública.

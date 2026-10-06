@@ -56,9 +56,11 @@
       '--brilho-tema': principal + '08',
       '--sombra-tema': texto + '18',
       '--foco-tema': legivel(principal, fundos, 3),
+      '--fundo-sobre-imagem': fundo + '66',
     };
     for (const [nome, cor] of Object.entries(variaveis)) destino.style.setProperty(nome, cor);
     destino.style.colorScheme = escuro ? 'dark' : 'light';
+    if(window.ImagemFundo)ImagemFundo.aplicar(valor,'',destino);
     return cores;
   }
   window.Tema = {padrao, campos: Object.freeze(campos), normalizar, validar, aplicar, contraste};

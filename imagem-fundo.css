@@ -1,0 +1,11 @@
+.com-imagem-fundo body{isolation:isolate}
+.com-imagem-fundo body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(var(--fundo-sobre-imagem),var(--fundo-sobre-imagem)),var(--imagem-fundo) center/cover no-repeat}
+.com-imagem-fundo .cabecalho,.com-imagem-fundo .agendamento,.com-imagem-fundo .admin-main,.com-imagem-fundo .rodape-site{background:var(--superficie);border-radius:6px}
+.com-imagem-fundo .agendamento{padding:24px}
+.com-imagem-fundo .rodape-site{padding:20px}
+.admin-main #campos-imagem-fundo{display:grid;gap:16px;border:0;margin:0;padding:0;min-width:0}
+.previa-imagem-fundo{display:grid;place-items:center;width:min(100%,480px);aspect-ratio:16/9;border:1px dashed var(--borda-tema);border-radius:6px;background:var(--superficie-suave);overflow:hidden}
+.previa-imagem-fundo img{width:100%;height:100%;object-fit:cover}
+.previa-imagem-fundo p{margin:16px;text-align:center}
+.admin-main #status-imagem-fundo{margin:0;min-height:1.5em}
+@media(max-width:480px){.com-imagem-fundo .agendamento{padding:16px}}

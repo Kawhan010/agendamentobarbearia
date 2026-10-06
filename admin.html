@@ -12,15 +12,18 @@
   <link rel="stylesheet" href="fotos-profissionais.css?v=20261003-fotos">
   <link rel="stylesheet" href="contato-rodape.css?v=20261003-contato">
   <link rel="stylesheet" href="admin-rotina.css?v=20261005-concluir">
-  <script src="tema.js?v=20261003-cores" defer></script>
+  <link rel="stylesheet" href="imagem-fundo.css?v=20261005-fundo">
+  <script src="imagem-fundo.js?v=20261005-fundo" defer></script>
+  <script src="tema.js?v=20261005-fundo" defer></script>
   <script src="supabase-config.js" defer></script>
-  <script src="saas.js?v=20261004-duracoes" defer></script>
+  <script src="saas.js?v=20261005-fundo" defer></script>
   <script src="fotos-profissionais.js?v=20261003-fotos" defer></script>
   <script src="admin-whatsapp.js?v=20261004-agradecimento" defer></script>
   <script src="admin-financeiro.js?v=20261004-resumo-compacto" defer></script>
   <script src="admin.js?v=20261004-rotina" defer></script>
-  <script src="admin-saas.js?v=20261004-rotina" defer></script>
+  <script src="admin-saas.js?v=20261005-fundo" defer></script>
   <script src="admin-rotina.js?v=20261005-concluir" defer></script>
+  <script src="admin-fundo.js?v=20261005-fundo" defer></script>
 </head>
 <body>
   <header class="admin-topo"><a href="index.html" aria-label="WK Agendamento — início"><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="56" height="56"></a><div><small>AGENDA BARBEARIA</small><h1>Painel do barbeiro</h1></div><button id="sair" hidden>Sair</button></header>
@@ -125,6 +128,16 @@
           <p id="status-personalizacao" class="status-personalizacao" role="status">Estas cores aparecem no painel e no seu link de agendamento.</p>
           <div class="acoes-personalizacao"><button type="submit" class="primario">Salvar cores</button><button type="button" id="descartar-cores">Descartar prévia</button><button type="button" id="restaurar-cores">Restaurar padrão</button></div>
           <p>Os textos se ajustam automaticamente para facilitar a leitura.</p>
+        </form>
+        <form id="form-imagem-fundo" class="admin-card">
+          <h2>Imagem de fundo</h2>
+          <fieldset id="campos-imagem-fundo">
+            <label>Escolher imagem<input id="arquivo-imagem-fundo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="ajuda-imagem-fundo"></label>
+            <p id="ajuda-imagem-fundo">Use uma imagem JPG, PNG ou WebP de até 5 MB. Ela será ajustada para carregar mais rápido. A imagem é pública e aparece no fundo das páginas da sua barbearia.</p>
+            <div class="previa-imagem-fundo"><img id="previa-imagem-fundo" alt="Prévia da imagem de fundo" hidden><p id="sem-imagem-fundo">Sem imagem de fundo</p></div>
+            <p id="status-imagem-fundo" role="status"></p>
+            <div class="acoes-personalizacao"><button type="submit" class="primario">Salvar imagem de fundo</button><button type="button" id="remover-imagem-fundo" hidden>Remover imagem</button><button type="button" id="descartar-imagem-fundo">Descartar prévia</button></div>
+          </fieldset>
         </form>
       </section>
     </div>

@@ -10,6 +10,7 @@ async function abrirBarbearia() {
   const lojas=await api('/rest/v1/saas_barbearias?select=*&id=eq.'+membros[0].barbearia_id);
   if(!lojas.length)throw new Error('Barbearia não encontrada.');
   lojaAtual=lojas[0];demo=false;
+  if(window.FundoPainel)FundoPainel.carregar();
   carregarPersonalizacao();
   $('nome-barbearia').textContent=lojaAtual.nome;
   document.querySelector('.admin-topo small').textContent=lojaAtual.nome;
@@ -249,12 +250,14 @@ function carregarPersonalizacao() {
     $(campo+'-valor').textContent=cores[campo].toUpperCase();
   }
   $('status-personalizacao').textContent='Estas cores aparecem no painel e no seu link de agendamento.';
+  if(window.FundoPainel)FundoPainel.reaplicar();
 }
 function coresFormulario() {
   return Tema.validar(Object.fromEntries(Tema.campos.map(campo=>[campo,$('form-personalizacao').elements[campo].value])));
 }
 function preverCores() {
-  const cores=Tema.aplicar(coresFormulario());
+  const cores=Tema.aplicar({...lojaAtual,...coresFormulario()});
+  if(window.FundoPainel)FundoPainel.reaplicar();
   for(const campo of Tema.campos)$(campo+'-valor').textContent=cores[campo].toUpperCase();
   $('status-personalizacao').textContent='Prévia das cores. Clique em Salvar cores para aplicar aos seus clientes.';
 }
@@ -267,15 +270,17 @@ $('restaurar-cores').onclick=()=>{
 submitSeguro('form-personalizacao',async()=>{
   if(demo){aviso('Demonstração: as cores mudam apenas nesta visualização. Entre na sua conta para salvar.');return;}
   if(!lojaAtual)throw new Error('Entre na sua conta para salvar as cores.');
-  const cores=coresFormulario(), campos=$('campos-cores');
+  const cores=coresFormulario(), campos=$('campos-cores'),fundo=$('campos-imagem-fundo');
+  if(campos.disabled)throw new Error('Aguarde a imagem de fundo ser salva.');
   campos.disabled=true;
+  if(fundo)fundo.disabled=true;$('sair').disabled=true;
   try{
     const rows=await api('/rest/v1/saas_barbearias?id=eq.'+lojaAtual.id,'PATCH',cores);
     if(!rows?.length)throw new Error('As cores não foram salvas. Confira sua conexão e tente novamente.');
     Object.assign(lojaAtual,rows[0]);
     carregarPersonalizacao();
     aviso('Cores salvas. Seu painel e seu link de agendamento usam esta personalização.');
-  }finally{campos.disabled=false;}
+  }finally{campos.disabled=false;if(fundo)fundo.disabled=false;$('sair').disabled=false;}
 });
 const demonstracaoOriginal=$('demonstracao').onclick;
 $('demonstracao').onclick=async()=>{
