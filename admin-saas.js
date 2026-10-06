@@ -17,6 +17,7 @@ async function abrirBarbearia() {
   const link=new URL('index.html',location.href);link.searchParams.set('barbearia',lojaAtual.slug);
   $('link-agendamento').href=link.href;$('link-agendamento').textContent=link.href;
   for(const campo of ['nome','whatsapp','logo'])$('form-configuracoes').elements[campo].value=lojaAtual[campo];
+  if(window.LogoPainel)LogoPainel.carregar();
   await carregar();$('login').hidden=true;$('painel').hidden=false;$('sair').hidden=false;aviso('Sua barbearia está conectada.');
 }
 function mostrarFormulario(id){for(const nome of ['form-login','form-cadastro','form-barbearia','form-nova-senha'])$(nome).hidden=nome!==id;$('mostrar-cadastro').hidden=!['form-login','form-cadastro'].includes(id);$('recuperar-senha').hidden=id!=='form-login';$('demonstracao').hidden=!['form-login','form-cadastro'].includes(id);}
@@ -48,12 +49,6 @@ submitSeguro('form-nova-senha',async f=>{
   const r=await fetch(config.url+'/auth/v1/user',{method:'PUT',headers:{apikey:config.publicKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password:f.password.value})});
   if(!r.ok)throw new Error('Não foi possível salvar a senha. Solicite um novo link.');
   f.reset();$('form-nova-senha').hidden=true;$('form-login').hidden=false;token='';aviso('Senha atualizada. Entre com sua nova senha.');
-});
-submitSeguro('form-configuracoes',async f=>{
-  if(demo)throw new Error('Entre na sua conta para configurar a barbearia.');
-  const logo=f.logo.value.trim();if(logo&&!/^https:\/\//.test(logo))throw new Error('Use uma URL HTTPS para a logo.');
-  await api('/rest/v1/saas_barbearias?id=eq.'+lojaAtual.id,'PATCH',{nome:f.nome.value.trim(),whatsapp:telefoneLoja(f.whatsapp.value),logo});
-  await abrirBarbearia();aviso('Dados da barbearia salvos.');
 });
 async function carregarProfissionais(){
   const pessoas=await api('/rest/v1/saas_profissionais?select=*&excluido=eq.false&barbearia_id=eq.'+lojaAtual.id+'&order=nome');
