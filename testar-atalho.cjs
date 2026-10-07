@@ -26,7 +26,7 @@ function tela(url,opcoes={}){
  const outra=await (await get('https://site.test/api/manifest?barbearia=outra-barbearia')).json();assert.notEqual(outra.id,manifest.id);
  const renomeada=await (await get('https://site.test/api/manifest?barbearia=barbearia-salles&nome=Novo%20nome')).json();assert.equal(renomeada.id,manifest.id);
  for(const icon of manifest.icons){const b=fs.readFileSync(icon.src.slice(1));assert.equal(b.readUInt32BE(16)+'x'+b.readUInt32BE(20),icon.sizes);}
- for(const arquivo of ['app-painel.webmanifest','app-agendamento.webmanifest']){
+ for(const arquivo of ['app-painel.webmanifest','app-agendamento.webmanifest','app-proprietario.webmanifest']){
   const m=JSON.parse(fs.readFileSync(arquivo,'utf8'));assert.equal(m.display,'standalone');assert.equal(m.id,m.start_url);assert.equal(m.icons.length,3);
  }
  for(const slug of ['', '../admin.html','foo%0Abar','ABC','x'])assert.equal((await get('https://site.test/api/manifest?barbearia='+encodeURIComponent(slug))).status,400);
@@ -47,12 +47,13 @@ function tela(url,opcoes={}){
  const nativo=t.el('instalar-atalho').onclick();await t.el('instalar-atalho').onclick();assert.equal(ev.chamadas,1);assert.equal(t.el('instalar-atalho').disabled,true);
  t.w.dispatchEvent(new t.w.Event('appinstalled'));aceitar({outcome:'accepted'});await nativo;assert.match(t.el('status-atalho').textContent,/Aplicativo instalado/);assert.equal(t.el('instalar-atalho').hidden,true);
  t=tela('https://usuario:senha@site.test/admin.html?access_token=nao-salvar#refresh_token=nao-salvar');casos.push(t);assert.equal(t.w.AtalhoAgenda.destino,'https://site.test/admin.html');assert.ok(t.d.querySelector('link[rel=manifest]').href.endsWith('/app-painel.webmanifest'));
+ t=tela('https://site.test/proprietario.html?barbearia=ignorar&access_token=nao-salvar#refresh_token=nao-salvar');casos.push(t);assert.equal(t.w.AtalhoAgenda.destino,'https://site.test/proprietario.html');assert.ok(t.d.querySelector('link[rel=manifest]').href.endsWith('/app-proprietario.webmanifest'));t.el('baixar-atalho').click();assert.equal(t.downloads[0].nome,'WK-Agendamento-Proprietario.url');assert.equal(t.el('nome-atalho').textContent,'Área do proprietário');
  t=tela('https://usuario.github.io/agendamentobarbearia/index.html?barbearia=salles');casos.push(t);assert.equal(t.d.querySelector('link[rel=manifest]'),null);assert.equal(t.w.AtalhoAgenda.destino,'https://usuario.github.io/agendamentobarbearia/index.html?barbearia=salles');
  t=tela('https://site.test/index.html?barbearia=../roubo');casos.push(t);assert.equal(t.el('baixar-atalho').disabled,true);t.el('baixar-atalho').click();assert.equal(t.blobs.length,0);assert.equal(t.evento().e.defaultPrevented,false);t.w.AtalhoAgenda.abrir();assert.match(t.el('status-atalho').textContent,/válido/);
  t=tela('https://site.test/index.html?barbearia=salles',{ua:'iPad',platform:'MacIntel',toques:5});casos.push(t);assert.equal(t.el('plataforma-atalho').value,'ios');assert.equal(t.d.querySelector('[data-instrucoes=ios]').hidden,false);
  t=tela('https://site.test/index.html?barbearia=salles',{ua:'Android Chrome'});casos.push(t);assert.equal(t.el('plataforma-atalho').value,'android');
  t=tela('https://site.test/index.html',{instalado:true});casos.push(t);t.evento();assert.equal(t.el('instalar-atalho').hidden,true);t.w.AtalhoAgenda.abrir();assert.match(t.el('status-atalho').textContent,/já está/);
- for(const pagina of ['admin.html','index.html','agendamento.html','horarios.html','resumo.html']){
+ for(const pagina of ['admin.html','index.html','agendamento.html','horarios.html','resumo.html','proprietario.html']){
   const d=new JSDOM(fs.readFileSync(pagina,'utf8').replace(/^\uFEFF/,'')).window.document;assert.equal(d.querySelectorAll('script[src^="atalho.js"]').length,1,pagina);assert.ok(d.head.querySelector('script[src^="atalho.js"]'),pagina);assert.ok(d.head.querySelector('link[rel="apple-touch-icon"]'),pagina);
  }
  casos.forEach(x=>x.dom.window.close());console.log('OK: manifestos e ícones, barbearias com identidade e links separados, painel sem tokens, arquivo Windows, orientação por aparelho, diálogo acessível, fluxo nativo/cancelamento/falha/duplicação e compatibilidade estática.');

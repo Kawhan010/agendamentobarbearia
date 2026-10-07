@@ -1,9 +1,9 @@
 window.AtalhoAgenda=(()=>{
   let pedido=null,solicitando=false,instalado=Boolean(navigator.standalone||window.matchMedia?.('(display-mode: standalone)').matches),hrefManifest='';
   const base=new URL('./',location.href);base.username='';base.password='';
-  const painel=location.pathname.endsWith('/admin.html'),params=new URLSearchParams(location.search),slug=params.get('barbearia');
+  const proprietario=location.pathname.endsWith('/proprietario.html'),painel=proprietario||location.pathname.endsWith('/admin.html'),params=new URLSearchParams(location.search),slug=params.get('barbearia');
   const valido=painel||!params.has('barbearia')||/^[a-z0-9-]{3,60}$/.test(slug||'');
-  const destino=new URL(painel?'admin.html':'index.html',base);if(!painel&&slug&&valido)destino.searchParams.set('barbearia',slug);
+  const destino=new URL(proprietario?'proprietario.html':painel?'admin.html':'index.html',base);if(!painel&&slug&&valido)destino.searchParams.set('barbearia',slug);
   const acesso=document.createElement('div');acesso.className='acesso-atalho';
   const abrir=document.createElement('button');abrir.type='button';abrir.id='criar-atalho';abrir.textContent='Criar atalho';abrir.setAttribute('aria-haspopup','dialog');acesso.append(abrir);
   (document.querySelector('main')||document.body).prepend(acesso);
@@ -27,7 +27,7 @@ window.AtalhoAgenda=(()=>{
   function disponibilidade(){botao.hidden=instalado||!pedido||!valido;botao.disabled=solicitando;}
   function atualizar(){
     const loja=!painel&&window.SaaS?.loja?.slug===slug?SaaS.loja:null;
-    const nome=painel?'Painel do barbeiro':loja?.nome||(!painel&&slug&&valido?'Agendamento · '+slug:'WK Agendamento');
+    const nome=proprietario?'Área do proprietário':painel?'Painel do barbeiro':loja?.nome||(!painel&&slug&&valido?'Agendamento · '+slug:'WK Agendamento');
     el('nome-atalho').textContent=nome;el('link-atalho').href=destino.href;el('link-atalho').textContent=destino.href;el('baixar-atalho').disabled=!valido;
     let href='';
     if(valido){
@@ -37,7 +37,7 @@ window.AtalhoAgenda=(()=>{
         if(!location.hostname.endsWith('.github.io')){
           const url=new URL('api/manifest',base);url.search=new URLSearchParams({barbearia:slug,nome});href=url.href;
         }
-      }else href=new URL(painel?'app-painel.webmanifest':'app-agendamento.webmanifest',base).href;
+      }else href=new URL(proprietario?'app-proprietario.webmanifest':painel?'app-painel.webmanifest':'app-agendamento.webmanifest',base).href;
     }
     if(href!==hrefManifest){
       hrefManifest=href;let link=document.querySelector('link[rel="manifest"]');
@@ -69,7 +69,7 @@ window.AtalhoAgenda=(()=>{
     if(!valido)return;
     const arquivo=new Blob(['[InternetShortcut]\r\nURL='+destino.href+'\r\n'],{type:'application/internet-shortcut'});
     const url=URL.createObjectURL(arquivo),link=document.createElement('a');
-    link.href=url;link.download='WK-Agendamento-'+(painel?'Painel':slug&&valido?slug:'Inicio')+'.url';
+    link.href=url;link.download='WK-Agendamento-'+(proprietario?'Proprietario':painel?'Painel':slug&&valido?slug:'Inicio')+'.url';
     document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     status('Salve o atalho na área de trabalho ou mova o arquivo da pasta Downloads quando o download terminar.');
   };

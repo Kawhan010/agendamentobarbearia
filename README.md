@@ -21,3 +21,7 @@ A imagem é ajustada para até 1024 pixels no maior lado, preservando a transpar
 Em instalações que já possuem o schema SaaS, aplique `supabase/migrations/20261006171714_logo_barbearia.sql`. A migração cria o bucket público `logos-barbearias` com limite de 2 MB por arquivo preparado. Envio, consulta administrativa e exclusão são restritos à pasta da barbearia do usuário conectado.
 
 Os testes `testar-logo-interface.cjs` e `testar-logo-sql.cjs` recebem como primeiro argumento uma pasta de dependências com `jsdom` e `@electric-sql/pglite`. Eles verificam o fluxo de imagem, erros de conexão, concorrência e isolamento entre barbearias.
+
+## Área do proprietário
+
+Em `proprietario.html`, a conta autorizada gerencia todas as barbearias, edita nome e WhatsApp, suspende/reativa novas reservas e acompanha o histórico de alterações. O acesso é validado pelo Supabase a cada chamada. Consulte [PROPRIETARIO.md](PROPRIETARIO.md) para configuração, permissões e testes.

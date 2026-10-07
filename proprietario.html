@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#262878">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Área do proprietário — WK Agendamento</title>
+  <link rel="icon" href="assets/app-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="proprietario.css?v=20261007">
+  <link rel="stylesheet" href="atalho.css?v=20261006-atalho">
+  <script src="supabase-config.js" defer></script>
+  <script src="saas.js?v=20261007" defer></script>
+  <script src="proprietario.js?v=20261007" defer></script>
+  <script src="atalho.js?v=20261007-proprietario" defer></script>
+</head>
+<body>
+  <header class="topo"><a href="index.html" aria-label="WK Agendamento — início"><img src="assets/wk-agendamento-logo.png" alt="WK Agendamento" width="58" height="58"></a><div><span class="sobretitulo">WK AGENDAMENTO</span><h1>Área do proprietário</h1></div><a class="link-painel" href="admin.html">Painel do barbeiro</a><button id="sair-proprietario" type="button" hidden>Sair</button></header>
+  <main>
+    <p id="aviso-proprietario" class="aviso" role="status" aria-live="polite"></p>
+    <section id="acesso-proprietario" class="cartao login">
+      <span class="sobretitulo">GESTÃO DA PLATAFORMA</span><h2>Suas barbearias, em um só lugar.</h2>
+      <p>Entre com a conta autorizada para acompanhar e gerenciar todas as barbearias.</p>
+      <form id="login-proprietario"><label>E-mail<input name="email" type="email" autocomplete="username" required maxlength="254"></label><label>Senha<input name="password" type="password" autocomplete="current-password" required></label><button type="submit" class="primario">Entrar como proprietário</button></form>
+      <p class="ajuda">Para recuperar sua senha, use <a href="admin.html">Esqueci minha senha no painel do barbeiro</a>.</p>
+    </section>
+    <div id="gestao-proprietario" hidden>
+      <section class="abertura"><div><span class="sobretitulo">VISÃO GERAL</span><h2>Gestão de barbearias</h2><p id="conta-proprietario"></p></div><button id="atualizar-proprietario" type="button">Atualizar dados</button></section>
+      <section id="totais-proprietario" class="indicadores" aria-label="Resumo da plataforma"></section>
+      <section class="cartao">
+        <div class="titulo-secao"><h3>Barbearias cadastradas</h3><span id="resultado-proprietario" role="status"></span></div>
+        <form id="busca-proprietario" class="filtros"><label>Buscar barbearia<input type="search" name="busca" maxlength="100" placeholder="Nome, link, WhatsApp ou e-mail"></label><label>Agendamentos<select name="situacao"><option value="todas">Todas as barbearias</option><option value="ativas">Ativos</option><option value="suspensas">Suspensos</option></select></label><button type="submit" class="primario">Buscar</button></form>
+        <div id="lista-barbearias" class="lojas" aria-busy="false"></div>
+        <div class="paginacao"><button id="lojas-anterior" type="button">Anterior</button><span id="pagina-proprietario" role="status"></span><button id="lojas-proxima" type="button">Próxima</button></div>
+      </section>
+      <section class="cartao"><h3>Últimas alterações</h3><p class="ajuda">Histórico das 20 alterações mais recentes feitas pela área do proprietário.</p><ol id="auditoria-proprietario" class="historico"></ol></section>
+    </div>
+    <dialog id="editar-barbearia" aria-labelledby="titulo-editar">
+      <div class="titulo-secao"><h2 id="titulo-editar">Gerenciar barbearia</h2><button id="fechar-edicao" type="button" aria-label="Fechar edição da barbearia">Fechar</button></div>
+      <p id="identidade-edicao" class="ajuda"></p>
+      <form id="form-editar-barbearia"><fieldset id="campos-edicao"><label>Nome da barbearia<input name="nome" maxlength="100" required></label><label>WhatsApp com DDD<input name="whatsapp" inputmode="tel" maxlength="20" required autocomplete="tel"></label><label>Novos agendamentos<select name="ativa"><option value="true">Ativos</option><option value="false">Suspensos</option></select></label><p id="efeito-suspensao" class="ajuda">Ao suspender, novas reservas e remarcações serão bloqueadas. O barbeiro poderá consultar o histórico, concluir atendimentos e registrar pagamentos existentes.</p><p id="aviso-edicao" class="aviso" role="alert"></p><button type="submit" class="primario">Salvar alterações</button></fieldset></form>
+    </dialog>
+  </main>
+  <footer>WK Agendamento · Gestão da plataforma</footer>
+</body>
+</html>

@@ -39,8 +39,9 @@ window.SaaS = {
   async buscarLoja() {
     const slug = new URLSearchParams(location.search).get('barbearia');
     if (!slug || !/^[a-z0-9-]{3,60}$/.test(slug)) throw new Error('Abra o link de agendamento enviado pela sua barbearia.');
-    const lojas = await this.request('saas_barbearias?select=id,nome,slug,whatsapp,logo,cor_principal,cor_destaque,cor_fundo,imagem_fundo&slug=eq.' + encodeURIComponent(slug));
+    const lojas = await this.request('saas_barbearias?select=id,nome,slug,whatsapp,logo,cor_principal,cor_destaque,cor_fundo,imagem_fundo,ativa&slug=eq.' + encodeURIComponent(slug));
     if (!lojas.length) throw new Error('Barbearia não encontrada. Confira o link.');
+    if (lojas[0].ativa === false) throw new Error('Esta barbearia está com novos agendamentos suspensos. Entre em contato com o barbeiro.');
     this.loja = lojas[0];
     Tema.aplicar(this.loja);
     document.title = this.loja.nome + ' — Agendamento';
@@ -50,7 +51,7 @@ window.SaaS = {
     if (logo) { logo.alt = this.loja.nome; if (/^https:\/\//.test(this.loja.logo)) logo.src = this.loja.logo; else logo.hidden = true; }
     for (const link of document.querySelectorAll('a[href]')) {
       const url = new URL(link.href);
-      if (url.origin === location.origin && !url.pathname.endsWith('/admin.html')) { url.searchParams.set('barbearia', slug); link.href = url.href; }
+      if (url.origin === location.origin && !/\/(admin|proprietario)\.html$/.test(url.pathname)) { url.searchParams.set('barbearia', slug); link.href = url.href; }
     }
     return this.loja;
   },

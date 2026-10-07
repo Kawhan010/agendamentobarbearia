@@ -18,12 +18,12 @@
   <script src="imagens-servicos.js?v=20261006-servicos" defer></script>
   <script src="tema.js?v=20261005-fundo" defer></script>
   <script src="supabase-config.js" defer></script>
-  <script src="saas.js?v=20261006-servicos" defer></script>
+  <script src="saas.js?v=20261007-proprietario" defer></script>
   <script src="fotos-profissionais.js?v=20261003-fotos" defer></script>
   <script src="admin-whatsapp.js?v=20261004-agradecimento" defer></script>
   <script src="admin-financeiro.js?v=20261004-resumo-compacto" defer></script>
   <script src="admin.js?v=20261006-servicos" defer></script>
-  <script src="admin-saas.js?v=20261006-logo" defer></script>
+  <script src="admin-saas.js?v=20261007-proprietario" defer></script>
   <link rel="stylesheet" href="admin-logo.css?v=20261006-logo">
   <script src="imagem-logo.js?v=20261006-logo" defer></script>
   <script src="admin-logo.js?v=20261006-logo" defer></script>
@@ -35,12 +35,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="stylesheet" href="atalho.css?v=20261006-atalho">
-  <script src="atalho.js?v=20261006-atalho" defer></script>
+  <script src="atalho.js?v=20261007-proprietario" defer></script>
 </head>
 <body>
   <header class="admin-topo"><a href="index.html" aria-label="WK Agendamento — início"><img class="marca-wk" src="assets/wk-agendamento-logo.png" alt="WK — Agendamento" width="56" height="56"></a><div><small>AGENDA BARBEARIA</small><h1>Painel do barbeiro</h1></div><button id="sair" hidden>Sair</button></header>
   <main class="admin-main">
     <p id="aviso" class="admin-aviso" role="status"></p>
+    <p><a href="proprietario.html">Área do proprietário da plataforma</a></p>
     <section id="login" class="admin-card login-card">
       <span class="etiqueta">Acesso do barbeiro</span><h2>Bem-vindo de volta</h2><p>Entre para cuidar da sua agenda.</p>
       <form id="form-login"><label>E-mail<input name="email" type="email" autocomplete="username" required></label><label>Senha<input name="password" type="password" autocomplete="current-password" required></label><button class="primario">Entrar</button></form>
@@ -51,6 +52,7 @@
       <button id="demonstracao" class="secundario">Conhecer o painel de demonstração</button>
     </section>
     <div id="painel" hidden>
+      <p id="aviso-suspensao" class="admin-aviso" role="status" hidden>Novos agendamentos estão suspensos pelo proprietário da plataforma. O histórico, a conclusão de atendimentos e os pagamentos existentes continuam disponíveis.</p>
       <section class="admin-card"><h2 id="nome-barbearia"></h2><p>Compartilhe com seus clientes: <a id="link-agendamento" target="_blank" rel="noopener"></a></p></section>
       <nav class="admin-nav" aria-label="Áreas do painel"><button data-area="agenda" aria-pressed="true">Agendamentos</button><button data-area="clientes" aria-pressed="false">Clientes</button><button data-area="caixa" aria-pressed="false">Caixa</button><button data-area="espera" aria-pressed="false">Lista de espera</button><button data-area="servicos" aria-pressed="false">Serviços e preços</button><button data-area="horarios" aria-pressed="false">Horários</button><button data-area="configuracoes" aria-pressed="false">Barbearia e profissionais</button><button data-area="personalizacao" aria-pressed="false">Personalização</button></nav>
       <section id="agenda" class="area"><div class="admin-titulo"><div><span class="etiqueta">Sua rotina</span><h2>Agendamentos</h2></div><button id="novo-agendamento" type="button" class="primario">Novo agendamento</button><label>Dia<input id="filtro-data" type="date"></label><button id="atualizar">Atualizar</button><button id="limpar-agendamentos" type="button" class="perigo" aria-describedby="escopo-limpeza-agenda" disabled>Limpar lista</button></div><p><strong>Confirmar</strong> salva no site. Para avisar o cliente, abra <strong>Confirmar no WhatsApp</strong> e toque em <strong>Enviar</strong> no WhatsApp.</p><p id="escopo-limpeza-agenda">Atendimentos concluídos, faltas e pagamentos permanecem no histórico.</p><section id="resumo-financeiro" class="resumo-financeiro" aria-label="Resumo dos valores da agenda" aria-live="polite"></section><div id="lista-agenda" class="admin-lista"></div><div class="paginacao" id="paginas-agenda" hidden><button id="agenda-anterior" type="button">Anterior</button><span id="pagina-agenda" role="status"></span><button id="agenda-proxima" type="button">Próxima</button></div></section>

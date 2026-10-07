@@ -10,6 +10,7 @@ async function abrirBarbearia() {
   const lojas=await api('/rest/v1/saas_barbearias?select=*&id=eq.'+membros[0].barbearia_id);
   if(!lojas.length)throw new Error('Barbearia não encontrada.');
   lojaAtual=lojas[0];demo=false;
+  $('aviso-suspensao').hidden=lojaAtual.ativa!==false;
   if(window.FundoPainel)FundoPainel.carregar();
   carregarPersonalizacao();
   $('nome-barbearia').textContent=lojaAtual.nome;
@@ -180,6 +181,7 @@ const sairOriginal=$('sair').onclick;
 $('sair').onclick=async()=>{
   const atual=token;
   sairOriginal();lojaAtual=null;
+  $('aviso-suspensao').hidden=true;
   limparEditorProfissional();$('lista-profissionais').replaceChildren();
   Tema.aplicar(Tema.padrao);
   mostrarFormulario('form-login');
