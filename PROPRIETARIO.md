@@ -1,6 +1,6 @@
 # Área do proprietário da plataforma
 
-Abra `proprietario.html` e entre com a conta autorizada. O link também aparece no painel do barbeiro. A sessão fica apenas em memória; ao recarregar a página, entre novamente.
+Abra `proprietario.html` pelo endereço direto ou pelo atalho salvo e entre com a conta autorizada. O acesso não aparece no painel do barbeiro nem nas páginas de agendamento. A sessão fica apenas em memória; ao recarregar a página, entre novamente.
 
 O painel permite consultar todas as barbearias, buscar por nome/link/WhatsApp/e-mail, filtrar as ativas ou suspensas, acompanhar totais da plataforma, abrir os links de agendamento e editar o nome, o WhatsApp e o recebimento de novas reservas. As últimas 20 alterações feitas pelo proprietário ficam registradas com data, conta responsável e valores anteriores/novos.
 
