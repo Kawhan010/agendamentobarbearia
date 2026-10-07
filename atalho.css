@@ -1,0 +1,25 @@
+.acesso-atalho{display:flex;justify-content:flex-end;margin:0 0 20px}
+.acesso-atalho button,.dialog-atalho button{border:1px solid var(--borda-tema,#c4c4cb);border-radius:6px;min-height:44px;padding:11px 16px;background:var(--superficie,#fff);color:var(--azul,#262878);font:600 .9rem system-ui,sans-serif;cursor:pointer}
+.acesso-atalho button:hover,.dialog-atalho button:hover{background:var(--superficie-suave,#f5f3f1)}
+.dialog-atalho{width:min(540px,calc(100% - 32px));max-height:calc(100svh - 32px);overflow:auto;border:1px solid var(--borda-tema,#ddd);border-radius:12px;padding:24px;background:var(--superficie,#fff);color:var(--texto,#252525);box-shadow:0 20px 80px #0004;font:16px/1.55 system-ui,sans-serif}
+.dialog-atalho::backdrop{background:#0008}
+.topo-atalho{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.dialog-atalho h2{font:600 1.5rem system-ui,sans-serif;margin:0}
+.dialog-atalho h3{font-size:1rem;margin:18px 0 8px}
+.dialog-atalho p{margin:16px 0;line-height:1.55}
+.dialog-atalho a{color:var(--azul,#262878);overflow-wrap:anywhere}
+.destino-atalho{padding:12px;border-radius:6px;background:var(--superficie-suave,#f5f3f1);font-size:.9rem}
+.plataforma-atalho{display:grid;gap:8px;margin-top:16px}
+.plataforma-atalho select{width:100%;border:1px solid var(--borda-tema,#bbb);border-radius:6px;min-height:44px;padding:10px;background:var(--superficie,#fff);color:inherit;font:inherit}
+.dialog-atalho ol{padding-left:24px;margin:8px 0 16px}
+.dialog-atalho li+li{margin-top:8px}
+.dialog-atalho .primario-atalho{background:var(--azul,#262878);border-color:var(--azul,#262878);color:#fff;width:100%}
+.dialog-atalho .primario-atalho:hover{background:var(--azul,#262878);filter:brightness(.92)}
+.dialog-atalho button:disabled{opacity:.6;cursor:wait}
+.dialog-atalho details{margin-top:16px}
+.dialog-atalho summary{cursor:pointer;color:var(--azul,#262878)}
+.dialog-atalho .nota-atalho{font-size:.85rem;color:var(--texto-secundario,#606068)}
+#status-atalho{font-size:.9rem}
+.acesso-atalho button:focus-visible,.dialog-atalho :focus-visible{outline:3px solid var(--vermelho,#ba2530);outline-offset:3px}
+@media(max-width:540px){.dialog-atalho{padding:18px}.topo-atalho{gap:10px}.dialog-atalho h2{font-size:1.3rem}}
+
