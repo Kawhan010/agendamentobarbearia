@@ -2,9 +2,10 @@
   'use strict';
   const $=id=>document.getElementById(id),form=$('form-editar-barbearia');
   let token='',ocupado=false,editada=null,pagina=0,cursores=[null],proximo=null,lojas=[],busca='',situacao='todas';
+  let excluindo=null,pedidoExclusao='';
   const aviso=texto=>{$('aviso-proprietario').textContent=texto;};
   function el(tag,texto,classe){const e=document.createElement(tag);if(texto!=null)e.textContent=texto;if(classe)e.className=classe;return e;}
-  function limpar(){token='';lojas=[];editada=null;pagina=0;cursores=[null];proximo=null;busca='';situacao='todas';$('gestao-proprietario').hidden=true;$('acesso-proprietario').hidden=false;$('sair-proprietario').hidden=true;$('conta-proprietario').textContent='';for(const id of ['lista-barbearias','totais-proprietario','auditoria-proprietario'])$(id).replaceChildren();$('busca-proprietario').reset();form.reset();if($('editar-barbearia').open)$('editar-barbearia').close();}
+  function limpar(){token='';lojas=[];editada=null;excluindo=null;pedidoExclusao='';pagina=0;cursores=[null];proximo=null;busca='';situacao='todas';$('gestao-proprietario').hidden=true;$('acesso-proprietario').hidden=false;$('sair-proprietario').hidden=true;$('conta-proprietario').textContent='';$('limpeza-exclusoes').hidden=true;for(const id of ['lista-barbearias','totais-proprietario','auditoria-proprietario'])$(id).replaceChildren();$('busca-proprietario').reset();form.reset();$('form-excluir-barbearia').reset();for(const id of ['editar-barbearia','excluir-barbearia'])if($(id).open)$(id).close();}
   async function rpc(nome,body){
     const c=window.AGENDA_CONFIG;
     if(!token)throw new Error('Entre com a conta autorizada.');
@@ -14,10 +15,11 @@
     if(!r.ok){const e=new Error(data?.message||'Não foi possível consultar o sistema. Tente novamente.');e.code=data?.code;throw e;}
     return data;
   }
-  function bloquear(valor){ocupado=valor;for(const id of ['sair-proprietario','atualizar-proprietario','fechar-edicao'])$(id).disabled=valor;for(const e of $('busca-proprietario').elements)e.disabled=valor;$('campos-edicao').disabled=valor;for(const e of $('lista-barbearias').querySelectorAll('button'))e.disabled=valor;$('lojas-anterior').disabled=valor||pagina===0;$('lojas-proxima').disabled=valor||!proximo;$('lista-barbearias').setAttribute('aria-busy',String(valor));}
+  function bloquear(valor){ocupado=valor;for(const id of ['sair-proprietario','atualizar-proprietario','fechar-edicao','abrir-exclusao','cancelar-exclusao','concluir-limpeza'])$(id).disabled=valor;for(const e of $('busca-proprietario').elements)e.disabled=valor;$('campos-edicao').disabled=valor;$('campos-exclusao').disabled=valor;validarConfirmacao();for(const e of $('lista-barbearias').querySelectorAll('button'))e.disabled=valor;$('lojas-anterior').disabled=valor||pagina===0;$('lojas-proxima').disabled=valor||!proximo;$('lista-barbearias').setAttribute('aria-busy',String(valor));}
   function linkLoja(loja){const u=new URL('index.html',location.href);u.search=new URLSearchParams({barbearia:loja.slug});u.hash='';return u.href;}
   function desenhar(data){
     lojas=data.lojas;proximo=data.proximo;$('conta-proprietario').textContent='Conectado como '+data.email;
+    $('limpeza-exclusoes').hidden=!data.limpeza_pendente;
     $('totais-proprietario').replaceChildren();
     for(const [chave,titulo] of [['barbearias','Barbearias'],['ativas','Barbearias ativas'],['suspensas','Barbearias suspensas'],['profissionais','Barbeiros ativos'],['agendamentos_hoje','Atendimentos hoje']]){const c=el('div',null,'indicador');c.append(el('span',titulo),el('strong',String(data.totais[chave])));$('totais-proprietario').append(c);}
     $('lista-barbearias').replaceChildren();
@@ -32,7 +34,7 @@
     if(!lojas.length)$('lista-barbearias').append(el('p','Nenhuma barbearia encontrada. Ajuste a busca ou os filtros.','vazio'));
     $('resultado-proprietario').textContent=data.encontradas+' encontrada'+(data.encontradas===1?'':'s');$('pagina-proprietario').textContent='Página '+(pagina+1);
     $('auditoria-proprietario').replaceChildren();
-    for(const item of data.auditoria){const li=el('li');li.append(el('strong',item.barbearia));const mudancas=[];if(item.antes.nome!==item.depois.nome)mudancas.push('Nome: '+item.antes.nome+' → '+item.depois.nome);if(item.antes.whatsapp!==item.depois.whatsapp)mudancas.push('WhatsApp: +'+item.antes.whatsapp+' → +'+item.depois.whatsapp);if(item.antes.ativa!==item.depois.ativa)mudancas.push(item.depois.ativa?'Novos agendamentos reativados':'Novos agendamentos suspensos');li.append(el('p',mudancas.join(' · ')),el('p','Por '+item.autor_email));const time=el('time',new Date(item.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}));time.dateTime=item.criado_em;li.append(time);$('auditoria-proprietario').append(li);}
+    for(const item of data.auditoria){const li=el('li');li.append(el('strong',item.barbearia));const mudancas=[];if(item.depois.excluida)mudancas.push('Barbearia excluída definitivamente');else{if(item.antes.nome!==item.depois.nome)mudancas.push('Nome: '+item.antes.nome+' → '+item.depois.nome);if(item.antes.whatsapp!==item.depois.whatsapp)mudancas.push('WhatsApp: +'+item.antes.whatsapp+' → +'+item.depois.whatsapp);if(item.antes.ativa!==item.depois.ativa)mudancas.push(item.depois.ativa?'Novos agendamentos reativados':'Novos agendamentos suspensos');}li.append(el('p',mudancas.join(' · ')),el('p','Por '+item.autor_email));const time=el('time',new Date(item.criado_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}));time.dateTime=item.criado_em;li.append(time);$('auditoria-proprietario').append(li);}
     if(!data.auditoria.length)$('auditoria-proprietario').append(el('li','As alterações feitas aqui aparecerão neste histórico.'));
   }
   async function carregar(){const data=await rpc('saas_proprietario_listar',{busca,situacao,apos:cursores[pagina]});desenhar(data);return data;}
@@ -66,6 +68,39 @@
       $('aviso-edicao').textContent=mensagem;aviso(mensagem);
     }
   });};
+  function validarConfirmacao(){$('confirmar-exclusao').disabled=ocupado||!excluindo||$('confirmar-nome-exclusao').value!==excluindo.nome;}
+  $('confirmar-nome-exclusao').oninput=validarConfirmacao;
+  $('abrir-exclusao').onclick=()=>{
+    if(ocupado||!editada||!token)return;excluindo={...editada};pedidoExclusao=crypto.randomUUID();$('editar-barbearia').close();
+    $('form-excluir-barbearia').reset();$('nome-exclusao').textContent=excluindo.nome;$('aviso-exclusao').textContent='';validarConfirmacao();$('excluir-barbearia').showModal();$('confirmar-nome-exclusao').focus();
+  };
+  $('cancelar-exclusao').onclick=()=>{if(!ocupado)$('excluir-barbearia').close();};
+  $('excluir-barbearia').addEventListener('cancel',e=>{if(ocupado)e.preventDefault();});
+  $('excluir-barbearia').addEventListener('close',()=>{excluindo=null;pedidoExclusao='';$('form-excluir-barbearia').reset();validarConfirmacao();origemEdicao?.focus();});
+  async function limparArquivosExcluidos(){
+    let anterior='';
+    for(;;){
+      const arquivos=await rpc('saas_proprietario_limpezas',{});if(!arquivos.length){$('limpeza-exclusoes').hidden=true;return;}
+      const identidade=JSON.stringify(arquivos);if(identidade===anterior)throw new Error('Algumas imagens ainda aguardam remoção. Use Concluir remoção das imagens para tentar novamente.');anterior=identidade;
+      const grupos=new Map();for(const a of arquivos){if(!['fotos-profissionais','imagens-servicos','fundos-barbearias','logos-barbearias'].includes(a.bucket))throw new Error('Não foi possível concluir a remoção das imagens.');if(!grupos.has(a.bucket))grupos.set(a.bucket,[]);grupos.get(a.bucket).push(a.caminho);}
+      for(const [bucket,prefixes] of grupos){const c=window.AGENDA_CONFIG,r=await fetch(c.url+'/storage/v1/object/'+bucket,{method:'DELETE',headers:{apikey:c.publicKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({prefixes})});if(!r.ok)throw new Error('Não foi possível remover todas as imagens. Use Concluir remoção das imagens para tentar novamente.');}
+    }
+  }
+  $('concluir-limpeza').onclick=()=>executar(async()=>{await limparArquivosExcluidos();aviso('Remoção das imagens concluída.');});
+  $('form-excluir-barbearia').onsubmit=e=>{e.preventDefault();if(ocupado)return;
+    if(!excluindo||$('confirmar-nome-exclusao').value!==excluindo.nome){$('aviso-exclusao').textContent='Digite o nome exato da barbearia para confirmar.';return;}
+    executar(async()=>{
+      const loja={...excluindo},pedido=pedidoExclusao;$('aviso-exclusao').textContent='Excluindo barbearia…';
+      try{await rpc('saas_proprietario_excluir',{loja:loja.id,confirmacao:$('confirmar-nome-exclusao').value,pedido});}
+      catch(err){const mensagem=err instanceof TypeError?'A resposta não chegou. Confirme novamente para verificar a mesma exclusão.':err.message;$('aviso-exclusao').textContent=mensagem;aviso(mensagem);return;}
+      $('excluir-barbearia').close();let pendente=false;
+      try{await limparArquivosExcluidos();}catch{pendente=true;}
+      if(!token){aviso('Barbearia '+loja.nome+' excluída. Entre novamente para conferir a remoção das imagens.');return;}
+      try{pagina=0;cursores=[null];await carregar();}catch{if(!token){aviso('Barbearia '+loja.nome+' excluída. Entre novamente para consultar a lista.');return;}$('lista-barbearias').replaceChildren(el('p','Barbearia excluída. Use Atualizar dados para consultar a lista.','vazio'));proximo=null;}
+      if(pendente)$('limpeza-exclusoes').hidden=false;
+      aviso('Barbearia '+loja.nome+' excluída definitivamente.'+(pendente?' Algumas imagens aguardam remoção; use o botão Concluir remoção das imagens.':''));
+    });
+  };
   // Sessões da área do proprietário ficam apenas em memória e não são incluídas no atalho.
   if(location.hash){history.replaceState(null,'',location.pathname+location.search);aviso('Entre com e-mail e senha para acessar a área do proprietário.');}
   bloquear(false);

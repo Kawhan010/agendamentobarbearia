@@ -10,11 +10,11 @@
   <title>Área do proprietário — WK Agendamento</title>
   <link rel="icon" href="assets/app-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="proprietario.css?v=20261007">
+  <link rel="stylesheet" href="proprietario.css?v=20261007-exclusao">
   <link rel="stylesheet" href="atalho.css?v=20261006-atalho">
   <script src="supabase-config.js" defer></script>
   <script src="saas.js?v=20261007" defer></script>
-  <script src="proprietario.js?v=20261007" defer></script>
+  <script src="proprietario.js?v=20261007-exclusao" defer></script>
   <script src="atalho.js?v=20261007-proprietario" defer></script>
 </head>
 <body>
@@ -30,6 +30,7 @@
     <div id="gestao-proprietario" hidden>
       <section class="abertura"><div><span class="sobretitulo">VISÃO GERAL</span><h2>Gestão de barbearias</h2><p id="conta-proprietario"></p></div><button id="atualizar-proprietario" type="button">Atualizar dados</button></section>
       <section id="totais-proprietario" class="indicadores" aria-label="Resumo da plataforma"></section>
+      <section id="limpeza-exclusoes" class="cartao" hidden><p>Há imagens de barbearias excluídas aguardando remoção.</p><button id="concluir-limpeza" type="button">Concluir remoção das imagens</button></section>
       <section class="cartao">
         <div class="titulo-secao"><h3>Barbearias cadastradas</h3><span id="resultado-proprietario" role="status"></span></div>
         <form id="busca-proprietario" class="filtros"><label>Buscar barbearia<input type="search" name="busca" maxlength="100" placeholder="Nome, link, WhatsApp ou e-mail"></label><label>Agendamentos<select name="situacao"><option value="todas">Todas as barbearias</option><option value="ativas">Ativos</option><option value="suspensas">Suspensos</option></select></label><button type="submit" class="primario">Buscar</button></form>
@@ -42,6 +43,13 @@
       <div class="titulo-secao"><h2 id="titulo-editar">Gerenciar barbearia</h2><button id="fechar-edicao" type="button" aria-label="Fechar edição da barbearia">Fechar</button></div>
       <p id="identidade-edicao" class="ajuda"></p>
       <form id="form-editar-barbearia"><fieldset id="campos-edicao"><label>Nome da barbearia<input name="nome" maxlength="100" required></label><label>WhatsApp com DDD<input name="whatsapp" inputmode="tel" maxlength="20" required autocomplete="tel"></label><label>Novos agendamentos<select name="ativa"><option value="true">Ativos</option><option value="false">Suspensos</option></select></label><p id="efeito-suspensao" class="ajuda">Ao suspender, novas reservas e remarcações serão bloqueadas. O barbeiro poderá consultar o histórico, concluir atendimentos e registrar pagamentos existentes.</p><p id="aviso-edicao" class="aviso" role="alert"></p><button type="submit" class="primario">Salvar alterações</button></fieldset></form>
+      <div class="zona-exclusao"><h3>Excluir barbearia</h3><p class="ajuda">Para apagar definitivamente esta barbearia e seus dados, confirme o nome na próxima etapa.</p><button id="abrir-exclusao" type="button" class="perigo">Excluir esta barbearia</button></div>
+    </dialog>
+    <dialog id="excluir-barbearia" aria-labelledby="titulo-excluir" aria-describedby="aviso-definitivo">
+      <div class="titulo-secao"><h2 id="titulo-excluir">Excluir barbearia</h2><button id="cancelar-exclusao" type="button">Cancelar</button></div>
+      <p id="aviso-definitivo">Esta ação apaga os profissionais, serviços, agendamentos, clientes e registros financeiros desta barbearia. Não pode ser desfeita.</p>
+      <p class="nome-confirmacao">Digite exatamente: <strong id="nome-exclusao"></strong></p>
+      <form id="form-excluir-barbearia"><fieldset id="campos-exclusao"><label for="confirmar-nome-exclusao">Nome da barbearia para confirmar<input id="confirmar-nome-exclusao" name="confirmacao" maxlength="100" required autocomplete="off" autocapitalize="off" spellcheck="false"></label><p class="ajuda">O nome deve ser igual ao exibido acima, incluindo maiúsculas e acentos.</p><p id="aviso-exclusao" class="aviso" role="alert"></p><button id="confirmar-exclusao" type="submit" class="perigo" disabled>Excluir definitivamente</button></fieldset></form>
     </dialog>
   </main>
   <footer>WK Agendamento · Gestão da plataforma</footer>
